@@ -10,7 +10,7 @@ const drive = google.drive({
 });
 
 // 👉 records.json 파일 ID 넣기
-const FILE_ID = '여기에_파일ID';
+const FILE_ID = '1HY-D4Z7dzriFEn6ZOy9kMWajKXv9cKd7';
 
 app.get('/records', async (req, res) => {
   try {
