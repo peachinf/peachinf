@@ -165,4 +165,17 @@ app.post('/sell_requests/add', async (req, res) => {
     res.status(500).send(e.toString());
   }
 });
+
+// ─── 수거요청 삭제 ─────────────────────────────────────────────
+app.delete('/requests/:id', async (req, res) => {
+  try {
+    const data = await readFile(FILE_IDS.requests);
+    const json = JSON.parse(data);
+    json.requests = json.requests.filter(r => String(r.id) !== String(req.params.id));
+    await writeFile(FILE_IDS.requests, json);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
 app.listen(process.env.PORT || 8080);
