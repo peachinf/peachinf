@@ -140,8 +140,6 @@ app.post('/notice', async (req, res) => {
   }
 });
 
-app.listen(process.env.PORT || 8080);
-
 // ─── 수거요청 추가 ─────────────────────────────────────────────
 app.post('/requests/add', async (req, res) => {
   try {
@@ -167,3 +165,4 @@ app.post('/sell_requests/add', async (req, res) => {
     res.status(500).send(e.toString());
   }
 });
+app.listen(process.env.PORT || 8080);
