@@ -141,3 +141,29 @@ app.post('/notice', async (req, res) => {
 });
 
 app.listen(process.env.PORT || 8080);
+
+// ─── 수거요청 추가 ─────────────────────────────────────────────
+app.post('/requests/add', async (req, res) => {
+  try {
+    const data = await readFile(FILE_IDS.requests);
+    const json = JSON.parse(data);
+    json.requests.push(req.body);
+    await writeFile(FILE_IDS.requests, json);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
+
+// ─── 판매요청 추가 ─────────────────────────────────────────────
+app.post('/sell_requests/add', async (req, res) => {
+  try {
+    const data = await readFile(FILE_IDS.sell_requests);
+    const json = JSON.parse(data);
+    json.requests.push(req.body);
+    await writeFile(FILE_IDS.sell_requests, json);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
