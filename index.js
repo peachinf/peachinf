@@ -65,7 +65,7 @@ app.get('/requests', async (req, res) => {
   }
 });
 
-// ─── 수거요청 완료 → 이력 이동 (POST /requests 보다 위에 있어야 함) ──
+// ─── 수거요청 완료 → 이력 이동 ────────────────────────────────
 app.post('/requests/complete', async (req, res) => {
   try {
     const { id } = req.body;
@@ -200,6 +200,16 @@ app.post('/notice', async (req, res) => {
   try {
     await writeFile(FILE_IDS.notice, req.body);
     res.json({ ok: true });
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
+
+// ─── 거래이력 ─────────────────────────────────────────
+app.get('/history', async (req, res) => {
+  try {
+    const data = await readFile(FILE_IDS.history);
+    res.send(data);
   } catch (e) {
     res.status(500).send(e.toString());
   }
