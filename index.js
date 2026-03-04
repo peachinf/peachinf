@@ -65,6 +65,44 @@ app.get('/requests', async (req, res) => {
   }
 });
 
+// ─── 수거요청 완료 → 이력 이동 (POST /requests 보다 위에 있어야 함) ──
+app.post('/requests/complete', async (req, res) => {
+  try {
+    const { id } = req.body;
+    const reqData = JSON.parse(await readFile(FILE_IDS.requests));
+    const idx = reqData.requests.findIndex(r => String(r.id) === String(id));
+    if (idx === -1) return res.status(404).json({ ok: false });
+
+    const completed = reqData.requests.splice(idx, 1)[0];
+    completed.status = "완료";
+    completed.kind = "수거";
+    completed.completed_date = new Date().toLocaleString('ko-KR');
+    await writeFile(FILE_IDS.requests, reqData);
+
+    const histData = JSON.parse(await readFile(FILE_IDS.history));
+    histData.history.push(completed);
+    await writeFile(FILE_IDS.history, histData);
+
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
+
+// ─── 수거요청 추가 ─────────────────────────────────────────────
+app.post('/requests/add', async (req, res) => {
+  try {
+    const data = await readFile(FILE_IDS.requests);
+    const json = JSON.parse(data);
+    json.requests.push(req.body);
+    await writeFile(FILE_IDS.requests, json);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
+
+// ─── 수거요청 상태변경 ─────────────────────────────────────────
 app.post('/requests', async (req, res) => {
   try {
     const data = await readFile(FILE_IDS.requests);
@@ -72,6 +110,19 @@ app.post('/requests', async (req, res) => {
     const { id, status } = req.body;
     const req_ = json.requests.find(r => r.id == id);
     if (req_) req_.status = status;
+    await writeFile(FILE_IDS.requests, json);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
+
+// ─── 수거요청 삭제 ─────────────────────────────────────────────
+app.delete('/requests/:id', async (req, res) => {
+  try {
+    const data = await readFile(FILE_IDS.requests);
+    const json = JSON.parse(data);
+    json.requests = json.requests.filter(r => String(r.id) !== String(req.params.id));
     await writeFile(FILE_IDS.requests, json);
     res.json({ ok: true });
   } catch (e) {
@@ -96,6 +147,19 @@ app.post('/sell_requests', async (req, res) => {
     const { id, status } = req.body;
     const req_ = json.requests.find(r => r.id == id);
     if (req_) req_.status = status;
+    await writeFile(FILE_IDS.sell_requests, json);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
+
+// ─── 판매요청 추가 ─────────────────────────────────────────────
+app.post('/sell_requests/add', async (req, res) => {
+  try {
+    const data = await readFile(FILE_IDS.sell_requests);
+    const json = JSON.parse(data);
+    json.requests.push(req.body);
     await writeFile(FILE_IDS.sell_requests, json);
     res.json({ ok: true });
   } catch (e) {
@@ -135,69 +199,6 @@ app.get('/notice', async (req, res) => {
 app.post('/notice', async (req, res) => {
   try {
     await writeFile(FILE_IDS.notice, req.body);
-    res.json({ ok: true });
-  } catch (e) {
-    res.status(500).send(e.toString());
-  }
-});
-
-// ─── 수거요청 완료 → 이력 이동 ────────────────────────────────
-app.post('/requests/complete', async (req, res) => {
-  try {
-    const { id } = req.body;
-    const reqData = JSON.parse(await readFile(FILE_IDS.requests));
-    const idx = reqData.requests.findIndex(r => String(r.id) === String(id));
-    if (idx === -1) return res.status(404).json({ ok: false });
-
-    const completed = reqData.requests.splice(idx, 1)[0];
-    completed.status = "완료";
-    completed.kind = "수거";
-    completed.completed_date = new Date().toLocaleString('ko-KR');
-    await writeFile(FILE_IDS.requests, reqData);
-
-    const histData = JSON.parse(await readFile(FILE_IDS.history));
-    histData.history.push(completed);
-    await writeFile(FILE_IDS.history, histData);
-
-    res.json({ ok: true });
-  } catch (e) {
-    res.status(500).send(e.toString());
-  }
-});
-
-// ─── 수거요청 추가 ─────────────────────────────────────────────
-app.post('/requests/add', async (req, res) => {
-  try {
-    const data = await readFile(FILE_IDS.requests);
-    const json = JSON.parse(data);
-    json.requests.push(req.body);
-    await writeFile(FILE_IDS.requests, json);
-    res.json({ ok: true });
-  } catch (e) {
-    res.status(500).send(e.toString());
-  }
-});
-
-// ─── 판매요청 추가 ─────────────────────────────────────────────
-app.post('/sell_requests/add', async (req, res) => {
-  try {
-    const data = await readFile(FILE_IDS.sell_requests);
-    const json = JSON.parse(data);
-    json.requests.push(req.body);
-    await writeFile(FILE_IDS.sell_requests, json);
-    res.json({ ok: true });
-  } catch (e) {
-    res.status(500).send(e.toString());
-  }
-});
-
-// ─── 수거요청 삭제 ─────────────────────────────────────────────
-app.delete('/requests/:id', async (req, res) => {
-  try {
-    const data = await readFile(FILE_IDS.requests);
-    const json = JSON.parse(data);
-    json.requests = json.requests.filter(r => String(r.id) !== String(req.params.id));
-    await writeFile(FILE_IDS.requests, json);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).send(e.toString());
