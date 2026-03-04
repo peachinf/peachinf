@@ -17,6 +17,7 @@ const FILE_IDS = {
   sell_requests: '1LcKY3kBLGZqmpJ4naKiC6ZX9SBLczUFn',
   pricing:       '1A1F5rzzXT2H56UDwYVptDkVoW5KHqTv1',
   notice:        '1y-QBQFcrduZx4dqmTEqun4xsBkv8H9nI',
+  history:       '1HRK3B14zYaElV8tga45Ib3qqDeJyR-Nd',
 };
 
 // ─── 공통 읽기 함수 ───────────────────────────────────
@@ -178,4 +179,29 @@ app.delete('/requests/:id', async (req, res) => {
     res.status(500).send(e.toString());
   }
 });
+
+// ─── 수거요청 완료 → 이력 이동 ────────────────────────────────
+app.post('/requests/complete', async (req, res) => {
+  try {
+    const { id } = req.body;
+    const reqData = JSON.parse(await readFile(FILE_IDS.requests));
+    const idx = reqData.requests.findIndex(r => String(r.id) === String(id));
+    if (idx === -1) return res.status(404).json({ ok: false });
+
+    const completed = reqData.requests.splice(idx, 1)[0];
+    completed.status = "완료";
+    completed.kind = "수거";
+    completed.completed_date = new Date().toLocaleString('ko-KR');
+    await writeFile(FILE_IDS.requests, reqData);
+
+    const histData = JSON.parse(await readFile(FILE_IDS.history));
+    histData.history.push(completed);
+    await writeFile(FILE_IDS.history, histData);
+
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
+
 app.listen(process.env.PORT || 8080);
