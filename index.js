@@ -89,6 +89,29 @@ app.post('/requests/complete', async (req, res) => {
   }
 });
 
+app.post('/sell_requests/complete', async (req, res) => {
+  try {
+    const { id } = req.body;
+    const reqData = JSON.parse(await readFile(FILE_IDS.sell_requests));
+    const idx = reqData.requests.findIndex(r => String(r.id) === String(id));
+    if (idx === -1) return res.status(404).json({ ok: false });
+
+    const completed = reqData.requests.splice(idx, 1)[0];
+    completed.status = "완료";
+    completed.kind = "판매";
+    completed.completed_date = new Date().toLocaleString('ko-KR');
+    await writeFile(FILE_IDS.sell_requests, reqData);
+
+    const histData = JSON.parse(await readFile(FILE_IDS.history));
+    histData.history.push(completed);
+    await writeFile(FILE_IDS.history, histData);
+
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
+
 // ─── 수거요청 추가 ─────────────────────────────────────────────
 app.post('/requests/add', async (req, res) => {
   try {
