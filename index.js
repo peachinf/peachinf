@@ -76,7 +76,7 @@ app.post('/requests/complete', async (req, res) => {
     const completed = reqData.requests.splice(idx, 1)[0];
     completed.status = "완료";
     completed.kind = "수거";
-    completed.completed_date = new Date().toLocaleString('ko-KR');
+    completed.completed_date = new Date().toISOString().slice(0, 16).replace('T', ' ');
     await writeFile(FILE_IDS.requests, reqData);
 
     const histData = JSON.parse(await readFile(FILE_IDS.history));
@@ -99,7 +99,7 @@ app.post('/sell_requests/complete', async (req, res) => {
     const completed = reqData.requests.splice(idx, 1)[0];
     completed.status = "완료";
     completed.kind = "판매";
-    completed.completed_date = new Date().toLocaleString('ko-KR');
+    completed.completed_date = new Date().toISOString().slice(0, 16).replace('T', ' ');
     await writeFile(FILE_IDS.sell_requests, reqData);
 
     const histData = JSON.parse(await readFile(FILE_IDS.history));
