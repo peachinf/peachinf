@@ -153,6 +153,18 @@ app.delete('/requests/:id', async (req, res) => {
   }
 });
 
+app.delete('/sell_requests/:id', async (req, res) => {
+  try {
+    const data = await readFile(FILE_IDS.sell_requests);
+    const json = JSON.parse(data);
+    json.requests = json.requests.filter(r => String(r.id) !== String(req.params.id));
+    await writeFile(FILE_IDS.sell_requests, json);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
+
 // ─── 판매요청 ─────────────────────────────────────────
 app.get('/sell_requests', async (req, res) => {
   try {
