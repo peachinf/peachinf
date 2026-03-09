@@ -26,7 +26,7 @@ const FILE_IDS = {
   pricing:       '1A1F5rzzXT2H56UDwYVptDkVoW5KHqTv1',
   notice:        '1y-QBQFcrduZx4dqmTEqun4xsBkv8H9nI',
   history:       '1HRK3B14zYaElV8tga45Ib3qqDeJyR-Nd',
-  fcm_tokens:    'YOUR_FCM_TOKENS_FILE_ID',  // ← 나중에 교체
+  fcm_tokens: '1U1y4tOqTFxvvi58LjLwTWtE574oFbrYV',
 };
 
 // ─── 공통 읽기 함수 ───────────────────────────────────
