@@ -32,7 +32,6 @@ const FILE_IDS = {
   pricing:       '1A1F5rzzXT2H56UDwYVptDkVoW5KHqTv1',
   notice:        '1y-QBQFcrduZx4dqmTEqun4xsBkv8H9nI',
   history:       '1HRK3B14zYaElV8tga45Ib3qqDeJyR-Nd',
-  fcm_tokens: '1U1y4tOqTFxvvi58LjLwTWtE574oFbrYV',
 };
 
 // ─── 공통 읽기 함수 ───────────────────────────────────
@@ -60,36 +59,20 @@ async function writeFile(fileId, jsonData) {
   });
 }
 
-// ─── FCM 발송 함수 ────────────────────────────────────
-async function sendFCM(title, body) {
+// ─── FCM 토픽 발송 ────────────────────────────────────
+// topic: 'transactions' (수거/판매) 또는 'notices' (공지)
+async function sendFCM(title, body, topic = 'transactions') {
   try {
-    const data = JSON.parse(await readFile(FILE_IDS.fcm_tokens));
-    if (!data.tokens?.length) return;
-    const result = await admin.messaging().sendEachForMulticast({
-      tokens: data.tokens,
+    await admin.messaging().send({
+      topic: topic,
       notification: { title, body },
       android: { priority: 'high' }
     });
-    console.log(`FCM 발송: 성공 ${result.successCount}, 실패 ${result.failureCount}`);
+    console.log(`FCM 발송 완료 [${topic}]: ${title}`);
   } catch (e) {
     console.error('FCM 오류:', e.message);
   }
 }
-
-// ─── FCM 토큰 등록 ────────────────────────────────────
-app.post('/fcm/register', async (req, res) => {
-  try {
-    const { token } = req.body;
-    const data = JSON.parse(await readFile(FILE_IDS.fcm_tokens));
-    if (token && !data.tokens.includes(token)) {
-      data.tokens.push(token);
-      await writeFile(FILE_IDS.fcm_tokens, data);
-    }
-    res.json({ ok: true });
-  } catch (e) {
-    res.status(500).send(e.toString());
-  }
-});
 
 // ─── 기존: 일정 (records) ────────────────────────────
 app.get('/records', async (req, res) => {
@@ -129,7 +112,7 @@ app.post('/requests/complete', async (req, res) => {
     histData.history.push(completed);
     await writeFile(FILE_IDS.history, histData);
 
-    await sendFCM('📦 수거신청 상태변경', '수거신청이 [완료] 처리되었습니다.');  // ✅ FCM
+    await sendFCM('📦 수거신청 상태변경', '수거신청이 [완료] 처리되었습니다.', 'transactions');
 
     res.json({ ok: true });
   } catch (e) {
@@ -155,7 +138,7 @@ app.post('/sell_requests/complete', async (req, res) => {
     histData.history.push(completed);
     await writeFile(FILE_IDS.history, histData);
 
-    await sendFCM('⚙️ 고철판매 상태변경', '고철판매신청이 [완료] 처리되었습니다.');  // ✅ FCM
+    await sendFCM('⚙️ 고철판매 상태변경', '고철판매신청이 [완료] 처리되었습니다.', 'transactions');
 
     res.json({ ok: true });
   } catch (e) {
@@ -186,7 +169,7 @@ app.post('/requests', async (req, res) => {
     if (req_) req_.status = status;
     await writeFile(FILE_IDS.requests, json);
 
-    await sendFCM('📦 수거신청 상태변경', `수거신청 상태가 [${status}](으)로 변경되었습니다.`);  // ✅ FCM
+    await sendFCM('📦 수거신청 상태변경', `수거신청 상태가 [${status}](으)로 변경되었습니다.`, 'transactions');
 
     res.json({ ok: true });
   } catch (e) {
@@ -239,7 +222,7 @@ app.post('/sell_requests', async (req, res) => {
     if (req_) req_.status = status;
     await writeFile(FILE_IDS.sell_requests, json);
 
-    await sendFCM('⚙️ 고철판매 상태변경', `고철판매신청 상태가 [${status}](으)로 변경되었습니다.`);  // ✅ FCM
+    await sendFCM('⚙️ 고철판매 상태변경', `고철판매신청 상태가 [${status}](으)로 변경되었습니다.`, 'transactions');
 
     res.json({ ok: true });
   } catch (e) {
@@ -293,9 +276,10 @@ app.post('/notice', async (req, res) => {
   try {
     await writeFile(FILE_IDS.notice, req.body);
 
+    // 공지사항은 notices 토픽으로 발송
     const title = req.body.title || '📢 공지사항';
     const body  = req.body.content || '새 공지가 등록되었습니다.';
-    await sendFCM(title, body);  // ✅ FCM
+    await sendFCM(title, body, 'notices');
 
     res.json({ ok: true });
   } catch (e) {
