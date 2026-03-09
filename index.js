@@ -1,7 +1,15 @@
 const express = require('express');
 const { google } = require('googleapis');
+const admin = require('firebase-admin');
+const serviceAccount = require('./serviceAccountKey.json');
+
 const app = express();
 app.use(express.json());
+
+// ─── Firebase Admin 초기화 ────────────────────────────
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 const drive = google.drive({
   version: 'v3',
@@ -18,6 +26,7 @@ const FILE_IDS = {
   pricing:       '1A1F5rzzXT2H56UDwYVptDkVoW5KHqTv1',
   notice:        '1y-QBQFcrduZx4dqmTEqun4xsBkv8H9nI',
   history:       '1HRK3B14zYaElV8tga45Ib3qqDeJyR-Nd',
+  fcm_tokens:    'YOUR_FCM_TOKENS_FILE_ID',  // ← 나중에 교체
 };
 
 // ─── 공통 읽기 함수 ───────────────────────────────────
@@ -45,6 +54,37 @@ async function writeFile(fileId, jsonData) {
   });
 }
 
+// ─── FCM 발송 함수 ────────────────────────────────────
+async function sendFCM(title, body) {
+  try {
+    const data = JSON.parse(await readFile(FILE_IDS.fcm_tokens));
+    if (!data.tokens?.length) return;
+    const result = await admin.messaging().sendEachForMulticast({
+      tokens: data.tokens,
+      notification: { title, body },
+      android: { priority: 'high' }
+    });
+    console.log(`FCM 발송: 성공 ${result.successCount}, 실패 ${result.failureCount}`);
+  } catch (e) {
+    console.error('FCM 오류:', e.message);
+  }
+}
+
+// ─── FCM 토큰 등록 ────────────────────────────────────
+app.post('/fcm/register', async (req, res) => {
+  try {
+    const { token } = req.body;
+    const data = JSON.parse(await readFile(FILE_IDS.fcm_tokens));
+    if (token && !data.tokens.includes(token)) {
+      data.tokens.push(token);
+      await writeFile(FILE_IDS.fcm_tokens, data);
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
+
 // ─── 기존: 일정 (records) ────────────────────────────
 app.get('/records', async (req, res) => {
   try {
@@ -65,7 +105,7 @@ app.get('/requests', async (req, res) => {
   }
 });
 
-// ─── 수거요청 완료 → 이력 이동 ────────────────────────────────
+// ─── 수거요청 완료 → 이력 이동 ───────────────────────
 app.post('/requests/complete', async (req, res) => {
   try {
     const { id } = req.body;
@@ -83,12 +123,15 @@ app.post('/requests/complete', async (req, res) => {
     histData.history.push(completed);
     await writeFile(FILE_IDS.history, histData);
 
+    await sendFCM('📦 수거신청 상태변경', '수거신청이 [완료] 처리되었습니다.');  // ✅ FCM
+
     res.json({ ok: true });
   } catch (e) {
     res.status(500).send(e.toString());
   }
 });
 
+// ─── 판매요청 완료 → 이력 이동 ───────────────────────
 app.post('/sell_requests/complete', async (req, res) => {
   try {
     const { id } = req.body;
@@ -106,13 +149,15 @@ app.post('/sell_requests/complete', async (req, res) => {
     histData.history.push(completed);
     await writeFile(FILE_IDS.history, histData);
 
+    await sendFCM('⚙️ 고철판매 상태변경', '고철판매신청이 [완료] 처리되었습니다.');  // ✅ FCM
+
     res.json({ ok: true });
   } catch (e) {
     res.status(500).send(e.toString());
   }
 });
 
-// ─── 수거요청 추가 ─────────────────────────────────────────────
+// ─── 수거요청 추가 ────────────────────────────────────
 app.post('/requests/add', async (req, res) => {
   try {
     const data = await readFile(FILE_IDS.requests);
@@ -125,7 +170,7 @@ app.post('/requests/add', async (req, res) => {
   }
 });
 
-// ─── 수거요청 상태변경 ─────────────────────────────────────────
+// ─── 수거요청 상태변경 ───────────────────────────────
 app.post('/requests', async (req, res) => {
   try {
     const data = await readFile(FILE_IDS.requests);
@@ -134,13 +179,16 @@ app.post('/requests', async (req, res) => {
     const req_ = json.requests.find(r => r.id == id);
     if (req_) req_.status = status;
     await writeFile(FILE_IDS.requests, json);
+
+    await sendFCM('📦 수거신청 상태변경', `수거신청 상태가 [${status}](으)로 변경되었습니다.`);  // ✅ FCM
+
     res.json({ ok: true });
   } catch (e) {
     res.status(500).send(e.toString());
   }
 });
 
-// ─── 수거요청 삭제 ─────────────────────────────────────────────
+// ─── 수거요청 삭제 ────────────────────────────────────
 app.delete('/requests/:id', async (req, res) => {
   try {
     const data = await readFile(FILE_IDS.requests);
@@ -175,6 +223,7 @@ app.get('/sell_requests', async (req, res) => {
   }
 });
 
+// ─── 판매요청 상태변경 ───────────────────────────────
 app.post('/sell_requests', async (req, res) => {
   try {
     const data = await readFile(FILE_IDS.sell_requests);
@@ -183,13 +232,16 @@ app.post('/sell_requests', async (req, res) => {
     const req_ = json.requests.find(r => r.id == id);
     if (req_) req_.status = status;
     await writeFile(FILE_IDS.sell_requests, json);
+
+    await sendFCM('⚙️ 고철판매 상태변경', `고철판매신청 상태가 [${status}](으)로 변경되었습니다.`);  // ✅ FCM
+
     res.json({ ok: true });
   } catch (e) {
     res.status(500).send(e.toString());
   }
 });
 
-// ─── 판매요청 추가 ─────────────────────────────────────────────
+// ─── 판매요청 추가 ────────────────────────────────────
 app.post('/sell_requests/add', async (req, res) => {
   try {
     const data = await readFile(FILE_IDS.sell_requests);
@@ -234,6 +286,11 @@ app.get('/notice', async (req, res) => {
 app.post('/notice', async (req, res) => {
   try {
     await writeFile(FILE_IDS.notice, req.body);
+
+    const title = req.body.title || '📢 공지사항';
+    const body  = req.body.content || '새 공지가 등록되었습니다.';
+    await sendFCM(title, body);  // ✅ FCM
+
     res.json({ ok: true });
   } catch (e) {
     res.status(500).send(e.toString());
