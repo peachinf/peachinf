@@ -1,12 +1,18 @@
 const express = require('express');
 const { google } = require('googleapis');
 const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json');
 
 const app = express();
 app.use(express.json());
 
 // ─── Firebase Admin 초기화 ────────────────────────────
+let serviceAccount;
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+  serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+} else {
+  serviceAccount = require('./serviceAccountKey.json');
+}
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
