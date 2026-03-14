@@ -380,4 +380,67 @@ app.get('/terms', (req, res) => {
 </html>`);
 });
 
+const INQUIRY_FILE_ID = '18EcxubeY1ZCfZjf9ZBx4mTSpFPI2FJU3';
+
+// ─── 문의 조회 ─────────────────────────────────────────
+app.get('/inquiries', async (req, res) => {
+  try {
+    const data = await readFile(INQUIRY_FILE_ID);
+    res.send(data);
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
+
+// ─── 문의 접수 (앱에서 전송) ─────────────────────────
+app.post('/inquiries/add', async (req, res) => {
+  try {
+    const data = JSON.parse(await readFile(INQUIRY_FILE_ID));
+    const inquiry = {
+      id: Date.now().toString(),
+      category: req.body.category,
+      content: req.body.content,
+      answer: null,
+      status: 'PENDING',
+      createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
+    };
+    data.inquiries.push(inquiry);
+    await writeFile(INQUIRY_FILE_ID, data);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
+
+// ─── 문의 답변 (PC에서 등록) ─────────────────────────
+app.post('/inquiries/reply', async (req, res) => {
+  try {
+    const { id, answer } = req.body;
+    const data = JSON.parse(await readFile(INQUIRY_FILE_ID));
+    const inq = data.inquiries.find(i => String(i.id) === String(id));
+    if (!inq) return res.status(404).json({ ok: false });
+    inq.answer = answer;
+    inq.status = 'ANSWERED';
+    await writeFile(INQUIRY_FILE_ID, data);
+
+    await sendFCM('💬 문의 답변 도착', '문의하신 내용에 답변이 등록되었습니다.', 'transactions');
+
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
+
+// ─── 문의 삭제 ─────────────────────────────────────────
+app.delete('/inquiries/:id', async (req, res) => {
+  try {
+    const data = JSON.parse(await readFile(INQUIRY_FILE_ID));
+    data.inquiries = data.inquiries.filter(i => String(i.id) !== String(req.params.id));
+    await writeFile(INQUIRY_FILE_ID, data);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
+
 app.listen(process.env.PORT || 8080);
