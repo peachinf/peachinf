@@ -397,7 +397,7 @@ app.post('/inquiries/add', async (req, res) => {
   try {
     const data = JSON.parse(await readFile(INQUIRY_FILE_ID));
     const inquiry = {
-      id: Date.now().toString(),
+      id: req.body.id || Date.now().toString(),
       category: req.body.category,
       content: req.body.content,
       answer: null,
