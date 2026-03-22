@@ -88,14 +88,15 @@ async function sendFCM(title, body, topic = 'transactions') {
 const CSV_HEADER = '날짜,구분,차량,거래처,품목,총중량,공차,총중량시간,공차시간,감율,감량,인수량,단가,금액,비고';
 
 function parseWeighingCSV(text) {
-  const lines = text.replace(/^\uFEFF/, '').trim().split('
-').filter(l => l.trim());
+  var clean = text;
+  if (clean.charCodeAt(0) === 0xFEFF) clean = clean.slice(1);
+  var lines = clean.trim().split(/\r?\n/).filter(function(l){ return l.trim(); });
   if (lines.length < 2) return [];
-  return lines.slice(1).map((line, idx) => {
-    const c = line.split(',');
+  return lines.slice(1).map(function(line, idx) {
+    var c = line.split(',');
     while (c.length < 15) c.push('');
     return {
-      id:        `${idx}_${c[0].trim()}_${c[2].trim()}`,
+      id:        idx + '_' + c[0].trim() + '_' + c[2].trim(),
       date:      c[0].trim(),  type:      c[1].trim(),
       car:       c[2].trim(),  company:   c[3].trim(),
       item:      c[4].trim(),  gross:     c[5].trim(),
@@ -111,7 +112,8 @@ function parseWeighingCSV(text) {
 async function appendWeighingCSV(b) {
   const { Readable } = require('stream');
   const text = await readFile(FILE_IDS.records_csv);
-  const clean = text.replace(/^\uFEFF/, '');
+  var clean = text;
+  if (clean.charCodeAt(0) === 0xFEFF) clean = clean.slice(1);
   const row = [
     b.date||'', b.type||'매입', b.car||'', b.company||'',
     b.item||'', b.gross||0, b.tare||0,
@@ -119,7 +121,7 @@ async function appendWeighingCSV(b) {
     b.lossRate||0, b.loss||0, b.real||0,
     b.price||0, b.amount||0, b.memo||''
   ].join(',');
-  const newText = '\uFEFF' + clean.trimEnd() + '
+  const newText = clean.trimEnd() + '
 ' + row;
   const stream = Readable.from([newText]);
   await drive.files.update({
