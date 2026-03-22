@@ -62,6 +62,7 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
 .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{text-align:center;padding:50px 20px;color:var(--sub);font-size:14px}
+.fl{font-size:13px;font-weight:700;color:var(--sub);white-space:nowrap;padding:6px 8px 6px 0;vertical-align:middle;}
 </style>
 </head>
 <body>
@@ -77,35 +78,68 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
 
 <!-- 탭0: 계량등록 -->
 <div class="page on" id="page0">
-  <div class="card" style="margin-top:6px;">
-    <div class="fg"><label>계량일자</label><input type="date" id="fDate"></div>
-    <div class="fg"><label>차량번호</label><input type="text" id="fCar" placeholder="12가 3456" autocomplete="off"></div>
-    <div class="fg"><label>거래처</label><input type="text" id="fCompany" placeholder="거래처명" autocomplete="off"></div>
-    <div class="fg"><label>품목</label><input type="text" id="fItem" placeholder="고철 · 비철 · 파지" autocomplete="off"></div>
-    <div class="row">
-      <div class="fg w2"><label>총중량</label><input type="number" id="fGross" class="right" inputmode="numeric" placeholder="0" oninput="calcAll()"></div>
-      <div class="fg w1"><label>시간</label><input type="time" id="fGrossTime"></div>
-    </div>
-    <div class="row">
-      <div class="fg w2"><label>공차중량</label><input type="number" id="fTare" class="right" inputmode="numeric" placeholder="0" oninput="calcAll()"></div>
-      <div class="fg w1"><label>시간</label><input type="time" id="fTareTime"></div>
-    </div>
-    <div class="row">
-      <div class="fg w1"><label>감율 (%)</label><input type="number" id="fLossRate" class="right" inputmode="numeric" placeholder="0" oninput="onRateInput()"></div>
-      <div class="fg w2"><label>감량</label><input type="number" id="fLoss" class="right" inputmode="numeric" placeholder="0" oninput="onLossInput()"></div>
-    </div>
-    <div class="row">
-      <div class="fg"><label>인수량</label><input type="text" id="fReal" class="right" readonly></div>
-      <div class="fg"><label>단가</label><input type="number" id="fPrice" class="right" inputmode="numeric" placeholder="0" oninput="calcAll()"></div>
-    </div>
-    <div class="fg"><label>금액</label><input type="text" id="fAmount" class="big" readonly></div>
-    <div class="fg"><label>비고</label><input type="text" id="fMemo" autocomplete="off"></div>
+  <div class="card" style="margin-top:6px;padding:10px;">
+    <table style="width:100%;border-collapse:collapse;">
+      <colgroup><col style="width:76px"><col style="width:90px"><col></colgroup>
+      <tr>
+        <td class="fl">계량일자</td>
+        <td colspan="2" style="padding:3px 0;"><input type="date" id="fDate" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;"></td>
+      </tr>
+      <tr>
+        <td class="fl">차량번호</td>
+        <td colspan="2" style="padding:3px 0;"><input type="text" id="fCar" autocomplete="off" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;"></td>
+      </tr>
+      <tr>
+        <td class="fl">거래처</td>
+        <td colspan="2" style="padding:3px 0;"><input type="text" id="fCompany" autocomplete="off" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;"></td>
+      </tr>
+      <tr>
+        <td class="fl">품목</td>
+        <td colspan="2" style="padding:3px 0;"><input type="text" id="fItem" autocomplete="off" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;"></td>
+      </tr>
+      <tr>
+        <td class="fl">총중량</td>
+        <td style="padding:3px 4px 3px 0;"><input type="time" id="fGrossTime" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;"></td>
+        <td style="padding:3px 0;"><input type="number" id="fGross" inputmode="numeric" placeholder="0" oninput="calcAll()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;"></td>
+      </tr>
+      <tr>
+        <td class="fl">공차중량</td>
+        <td style="padding:3px 4px 3px 0;"><input type="time" id="fTareTime" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;"></td>
+        <td style="padding:3px 0;"><input type="number" id="fTare" inputmode="numeric" placeholder="0" oninput="calcAll()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;"></td>
+      </tr>
+      <tr>
+        <td class="fl">감량</td>
+        <td style="padding:3px 4px 3px 0;">
+          <div style="display:flex;align-items:center;gap:2px;">
+            <input type="number" id="fLossRate" inputmode="numeric" placeholder="0" oninput="onRateInput()" style="width:60%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;text-align:right;font-family:inherit;">
+            <span style="font-size:13px;color:#666;">%</span>
+          </div>
+        </td>
+        <td style="padding:3px 0;"><input type="number" id="fLoss" inputmode="numeric" placeholder="0" oninput="onLossInput()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;"></td>
+      </tr>
+      <tr>
+        <td class="fl">인수량</td>
+        <td colspan="2" style="padding:3px 0;"><input type="text" id="fReal" readonly style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;background:#f5f5f5;font-family:inherit;"></td>
+      </tr>
+      <tr>
+        <td class="fl">단가</td>
+        <td colspan="2" style="padding:3px 0;"><input type="number" id="fPrice" inputmode="numeric" placeholder="0" oninput="calcAll()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;"></td>
+      </tr>
+      <tr>
+        <td class="fl">금액</td>
+        <td colspan="2" style="padding:3px 0;"><input type="text" id="fAmount" readonly style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:16px;font-weight:700;text-align:right;background:#f5f5f5;font-family:inherit;"></td>
+      </tr>
+      <tr>
+        <td class="fl">비고</td>
+        <td colspan="2" style="padding:3px 0;"><input type="text" id="fMemo" autocomplete="off" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;"></td>
+      </tr>
+    </table>
   </div>
   <div class="btn-row" style="margin-bottom:20px;">
-    <button class="btn btn-gray" style="flex:1" onclick="resetForm()">초기화</button>
-    <button class="btn btn-blue" style="flex:1" onclick="saveRecord()">저장</button>
-    <button class="btn btn-green" style="flex:1" onclick="genCertImg()">계근사진</button>
-    <button class="btn btn-green" style="flex:1" onclick="genBuyImg()">매입사진</button>
+    <button class="btn btn-gray" style="flex:1;padding:11px;" onclick="resetForm()">초기화</button>
+    <button class="btn btn-blue" style="flex:1;padding:11px;" onclick="saveRecord()">저장</button>
+    <button class="btn btn-green" style="flex:1;padding:11px;" onclick="genCertImg()">계근</button>
+    <button class="btn btn-green" style="flex:1;padding:11px;" onclick="genBuyImg()">매입</button>
   </div>
 </div>
 
