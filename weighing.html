@@ -317,7 +317,7 @@ function loadToForm(id){
 
 function mkCanvas(w,h){var cv=document.createElement('canvas');cv.width=w;cv.height=h;return cv;}
 
-// ─── 계근사진 (계량증명서 양식) ──────────────────────
+// ─── 계근사진 ────────────────────────────────────────
 function genCertImg(){
   var date=document.getElementById('fDate').value;
   var car=document.getElementById('fCar').value.trim()||'-';
@@ -333,93 +333,98 @@ function genCertImg(){
   var amount=pn(document.getElementById('fAmount').value.replace(/,/g,''));
   var memo=document.getElementById('fMemo').value.trim();
 
-  var W=640, LW=160, ROW=44;
+  var W=640, LW=170, ROW=52;
   var ROWS=[
-    ['일     자', date],
-    ['차량번호', car],
-    ['거 래 처', company],
-    ['품     명', item],
-    ['총 중 량', grossTime+'  '+fmt(gross)+' kg'],
-    ['공     차', tareTime+'  '+fmt(tare)+' kg'],
-    ['감     량', fmt(loss)+' kg'],
-    ['인 수 량', fmt(real)+' kg'],
-    ['단     가', fmt(price)+' 원/kg'],
-    ['금     액', fmt(amount)+' 원'],
-    ['비     고', memo||''],
+    ['일     자',  date,      '#F0F4FF', false],
+    ['차량번호',   car,       '#F0F4FF', false],
+    ['거 래 처',  company,   '#F0F4FF', false],
+    ['품     명',  item,      '#F0F4FF', false],
+    ['총 중 량',  grossTime+'  '+fmt(gross)+' kg', '#F0F4FF', false],
+    ['공     차',  tareTime+'  '+fmt(tare)+' kg',  '#F0F4FF', false],
+    ['감     량',  fmt(loss)+' kg',   '#F0F4FF', false],
+    ['인 수 량',  fmt(real)+' kg',   '#F0F4FF', false],
+    ['단     가',  fmt(price)+' 원/kg','#F0F4FF', false],
+    ['금     액',  fmt(amount)+' 원', '#EAF0FF', true],
+    ['비     고',  memo||'',          '#F0F4FF', false],
   ];
-  var H = 70 + ROWS.length*ROW + 120;
+  var H = 100 + ROWS.length*ROW + 140;
   var cv=mkCanvas(W,H), cx=cv.getContext('2d');
 
-  // 배경
   cx.fillStyle='#fff'; cx.fillRect(0,0,W,H);
 
-  // 외곽 테두리
-  cx.strokeStyle='#1a1a2e'; cx.lineWidth=2;
-  cx.strokeRect(10,10,W-20,H-20);
-
-  // 제목
-  cx.fillStyle='#1a1a2e';
-  cx.font='bold 24px sans-serif';
+  // 제목 배경
+  cx.fillStyle='#4A6FA5';
+  cx.fillRect(0,0,W,70);
+  cx.fillStyle='#fff';
+  cx.font='bold 32px sans-serif';
   cx.textAlign='center';
   cx.fillText('계  량  증  명  서', W/2, 46);
 
-  cx.font='12px sans-serif';
-  cx.fillText('(공급자 보관용)', W/2, 62);
+  // 공급자 보관용
+  cx.fillStyle='#EEF2FA';
+  cx.fillRect(0,70,W,28);
+  cx.fillStyle='#555';
+  cx.font='13px sans-serif';
+  cx.textAlign='right';
+  cx.fillText('(공급자 보관용)', W-12, 88);
 
   // 테이블
-  var TY=74;
+  var TY=98;
   ROWS.forEach(function(row,i){
-    var lbl=row[0], val=row[1], y=TY+i*ROW;
-    var isAmt=lbl.indexOf('금     액')>=0;
+    var lbl=row[0], val=row[1], bg=row[2], isAmt=row[3];
+    var y=TY+i*ROW;
 
-    cx.fillStyle=i%2===0?'#f8f8f8':'#fff';
-    cx.fillRect(12,y,W-24,ROW);
-
+    // 행 배경
+    cx.fillStyle='#fff'; cx.fillRect(0,y,W,ROW);
     // 레이블 배경
-    cx.fillStyle='#e8eaed';
-    cx.fillRect(12,y,LW,ROW);
+    cx.fillStyle=bg; cx.fillRect(0,y,LW,ROW);
+    // 값 배경 (금액만)
+    if(isAmt){ cx.fillStyle=bg; cx.fillRect(LW,y,W-LW,ROW); }
 
     // 구분선
-    cx.strokeStyle='#ccc'; cx.lineWidth=0.8;
-    cx.strokeRect(12,y,W-24,ROW);
-    cx.beginPath(); cx.moveTo(12+LW,y); cx.lineTo(12+LW,y+ROW); cx.stroke();
+    cx.strokeStyle='#ccd4e8'; cx.lineWidth=0.8;
+    cx.strokeRect(0,y,W,ROW);
+    cx.beginPath(); cx.moveTo(LW,y); cx.lineTo(LW,y+ROW); cx.stroke();
 
     // 레이블
-    cx.fillStyle='#333';
-    cx.font='bold 14px sans-serif';
+    cx.fillStyle='#2c3e6b';
+    cx.font='bold 18px sans-serif';
     cx.textAlign='center';
-    cx.fillText(lbl, 12+LW/2, y+ROW/2+5);
+    cx.fillText(lbl, LW/2, y+ROW/2+6);
 
     // 값
     cx.fillStyle=isAmt?'#1565C0':'#1a1a2e';
-    cx.font=isAmt?'bold 18px sans-serif':'15px sans-serif';
+    cx.font=isAmt?'bold 20px sans-serif':'17px sans-serif';
     cx.textAlign=isAmt?'right':'left';
-    cx.fillText(val, isAmt?W-20:12+LW+12, y+ROW/2+5);
+    cx.fillText(val, isAmt?W-16:LW+14, y+ROW/2+6);
   });
 
-  // 하단 업체 정보
-  var BY = TY + ROWS.length*ROW + 14;
-  cx.strokeStyle='#ccc'; cx.lineWidth=0.8;
-  cx.beginPath(); cx.moveTo(12,BY); cx.lineTo(W-12,BY); cx.stroke();
+  // 하단 업체정보
+  var BY=TY+ROWS.length*ROW;
+  cx.fillStyle='#F7F9FF';
+  cx.fillRect(0,BY,W,140);
+  cx.strokeStyle='#ccd4e8'; cx.lineWidth=0.8;
+  cx.beginPath(); cx.moveTo(0,BY); cx.lineTo(W,BY); cx.stroke();
 
-  cx.fillStyle='#333';
-  cx.font='bold 14px sans-serif';
+  cx.fillStyle='#1a1a2e';
+  cx.font='bold 18px sans-serif';
   cx.textAlign='center';
-  cx.fillText('대성자원(재달)', W/2, BY+22);
+  cx.fillText('대성자원(재달)', W/2, BY+28);
 
-  cx.font='12px sans-serif';
-  cx.fillText('주소 : 전남 순천시 주암면 광천리 215', W/2, BY+40);
-  cx.fillText('HP : 010-5773-1520    Fax : 0504-428-1520', W/2, BY+56);
+  cx.font='13px sans-serif';
+  cx.fillStyle='#444';
+  cx.fillText('주소 : 전남 순천시 주암면 광천리 215', W/2, BY+52);
+  cx.fillText('HP : 010-5773-1520    Fax : 0504-428-1520', W/2, BY+72);
 
   cx.fillStyle='#666';
   cx.font='11px sans-serif';
-  cx.fillText('필히 재확인 하십시오. ( 단위 : kg , 단가 : 원/kg )', W/2, BY+76);
-  cx.fillText('확인 후 중량의 변동에 대한 책임은 본 업소에는 없습니다.', W/2, BY+92);
+  cx.fillText('필히 재확인 하십시오. ( 단위 : kg , 단가 : 원/kg )', W/2, BY+100);
+  cx.fillText('확인 후 중량의 변동에 대한 책임은 본 업소에는 없습니다.', W/2, BY+118);
 
   shareImg(cv, '계근표_'+car+'_'+date+'.jpg');
 }
 
-// ─── 매입사진 (매입명세서 양식) ──────────────────────
+// ─── 매입사진 ────────────────────────────────────────
 function genBuyImg(){
   var from=document.getElementById('sFrom').value||todayStr().slice(0,7)+'-01';
   var to=document.getElementById('sTo').value||todayStr();
@@ -435,71 +440,75 @@ function genBuyImg(){
   if(!target.length){toast('매입 기록 없음');return;}
 
   var COLS=[
-    {h:'일자',      w:100, key:'date',    align:'center'},
-    {h:'차량번호',  w:85,  key:'car',     align:'center'},
-    {h:'거래처',    w:120, key:'company', align:'center'},
-    {h:'품목',      w:70,  key:'item',    align:'center'},
-    {h:'총중량',    w:80,  key:'gross',   align:'right', num:true},
-    {h:'공차',      w:80,  key:'tare',    align:'right', num:true},
-    {h:'감량',      w:70,  key:'loss',    align:'right', num:true},
-    {h:'인수량',    w:80,  key:'real',    align:'right', num:true},
-    {h:'단가',      w:70,  key:'price',   align:'right', num:true},
-    {h:'금액',      w:95,  key:'amount',  align:'right', num:true},
-    {h:'비고',      w:80,  key:'memo',    align:'left'},
+    {h:'일자',    w:100, key:'date',    align:'center'},
+    {h:'차량번호',w:85,  key:'car',     align:'center'},
+    {h:'거래처',  w:120, key:'company', align:'center'},
+    {h:'품목',    w:70,  key:'item',    align:'center'},
+    {h:'총중량',  w:80,  key:'gross',   align:'right', num:true},
+    {h:'공차',    w:70,  key:'tare',    align:'right', num:true},
+    {h:'감량',    w:65,  key:'loss',    align:'right', num:true},
+    {h:'인수량',  w:80,  key:'real',    align:'right', num:true},
+    {h:'단가',    w:65,  key:'price',   align:'right', num:true},
+    {h:'금액',    w:95,  key:'amount',  align:'right', num:true},
+    {h:'비고',    w:70,  key:'memo',    align:'left'},
   ];
-  var PAD=12, HDR=90, ROW=34;
-  var W=COLS.reduce(function(s,c){return s+c.w;},0)+PAD*2;
-  var H=HDR+(target.length+1)*ROW+20;
+  var PAD=0, HDR=86, ROW=36;
+  var W=COLS.reduce(function(s,c){return s+c.w;},0);
+  var H=HDR+(target.length+1)*ROW+10;
 
   var cv=mkCanvas(W,H), cx=cv.getContext('2d');
   cx.fillStyle='#fff'; cx.fillRect(0,0,W,H);
 
-  // 외곽 테두리
-  cx.strokeStyle='#1a1a2e'; cx.lineWidth=2;
-  cx.strokeRect(8,8,W-16,H-16);
-
   // 제목
-  cx.fillStyle='#1a1a2e';
+  cx.fillStyle='#4A6FA5';
+  cx.fillRect(0,0,W,52);
+  cx.fillStyle='#fff';
   cx.font='bold 22px sans-serif';
   cx.textAlign='center';
-  cx.fillText('매  입  명  세  서', W/2, 38);
+  cx.fillText('매  입  명  세  서', W/2, 35);
 
   // 출력일자
-  cx.font='12px sans-serif';
+  cx.fillStyle='#fff';
+  cx.font='11px sans-serif';
   cx.textAlign='right';
-  cx.fillText('출력일자: '+new Date().toLocaleDateString('ko-KR'), W-PAD, 58);
+  cx.fillText('출력일자: '+new Date().toLocaleDateString('ko-KR'), W-8, 68);
 
-  // 기간/거래처
+  cx.fillStyle='#333';
   cx.textAlign='left';
-  cx.fillText('기간: '+from+' ~ '+to+(company?'   거래처: '+company:''), PAD, 58);
+  cx.fillText('기간: '+from+' ~ '+to+(company?'  거래처: '+company:''), 8, 68);
 
   // 컬럼 X
-  var xs=[PAD];
+  var xs=[0];
   COLS.forEach(function(c){xs.push(xs[xs.length-1]+c.w);});
 
   // 헤더행
   var y=HDR;
-  cx.fillStyle='#1a1a2e';
-  cx.fillRect(PAD,y,W-PAD*2,ROW);
-  cx.fillStyle='#fff';
-  cx.font='bold 13px sans-serif';
+  cx.fillStyle='#F0F4FF';
+  cx.fillRect(0,y,W,ROW);
+  cx.strokeStyle='#ccd4e8'; cx.lineWidth=0.8;
+  cx.strokeRect(0,y,W,ROW);
+  cx.fillStyle='#2c3e6b';
+  cx.font='bold 12px sans-serif';
   COLS.forEach(function(c,i){
     cx.textAlign='center';
     cx.fillText(c.h, xs[i]+c.w/2, y+ROW/2+5);
+    cx.beginPath(); cx.moveTo(xs[i],y); cx.lineTo(xs[i],y+ROW); cx.stroke();
   });
   y+=ROW;
 
   var totR=0, totA=0;
   target.forEach(function(r,ri){
-    cx.fillStyle=ri%2===0?'#fff':'#f8f8f8';
-    cx.fillRect(PAD,y,W-PAD*2,ROW);
-    cx.strokeStyle='#ccc'; cx.lineWidth=0.5;
-    COLS.forEach(function(_,i){cx.strokeRect(xs[i],y,COLS[i].w,ROW);});
+    cx.fillStyle=ri%2===0?'#fff':'#f8faff';
+    cx.fillRect(0,y,W,ROW);
+    cx.strokeStyle='#dde3f0'; cx.lineWidth=0.5;
+    COLS.forEach(function(_,i){
+      cx.strokeRect(xs[i],y,COLS[i].w,ROW);
+    });
     cx.fillStyle='#1a1a2e'; cx.font='12px sans-serif';
     COLS.forEach(function(c,i){
       var val=c.num?fmt(r[c.key]):(r[c.key]||'');
       cx.textAlign=c.align;
-      var tx=c.align==='right'?xs[i]+c.w-6:c.align==='center'?xs[i]+c.w/2:xs[i]+6;
+      var tx=c.align==='right'?xs[i]+c.w-5:c.align==='center'?xs[i]+c.w/2:xs[i]+5;
       cx.fillText(val,tx,y+ROW/2+5);
     });
     totR+=Number(r.real)||0; totA+=Number(r.amount)||0;
@@ -507,16 +516,16 @@ function genBuyImg(){
   });
 
   // 합계행
-  cx.fillStyle='#e8eaed';
-  cx.fillRect(PAD,y,W-PAD*2,ROW);
-  cx.strokeStyle='#999'; cx.lineWidth=1;
-  cx.strokeRect(PAD,y,W-PAD*2,ROW);
-  cx.fillStyle='#1a1a2e'; cx.font='bold 13px sans-serif';
+  cx.fillStyle='#EAF0FF';
+  cx.fillRect(0,y,W,ROW);
+  cx.strokeStyle='#4A6FA5'; cx.lineWidth=1;
+  cx.strokeRect(0,y,W,ROW);
+  cx.fillStyle='#2c3e6b'; cx.font='bold 13px sans-serif';
   cx.textAlign='center';
   cx.fillText('합 계', xs[0]+COLS[0].w/2, y+ROW/2+5);
   cx.textAlign='right';
-  cx.fillText(fmt(totR), xs[7]+COLS[7].w-6, y+ROW/2+5);
-  cx.fillText(fmt(totA), xs[9]+COLS[9].w-6, y+ROW/2+5);
+  cx.fillText(fmt(totR), xs[7]+COLS[7].w-5, y+ROW/2+5);
+  cx.fillText(fmt(totA), xs[9]+COLS[9].w-5, y+ROW/2+5);
 
   shareImg(cv, '매입명세서_'+from+'_'+to+'.jpg');
 }
