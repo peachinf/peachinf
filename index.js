@@ -139,8 +139,18 @@ app.get('/records', async (req, res) => {
   }
 });
 
-// ─── 추가: 계량기록 저장 ──────────────────────────────
+// ─── 기존: 일정 저장 (재활용수집 PC용) ──────────────
 app.post('/records', async (req, res) => {
+  try {
+    await writeFile(FILE_IDS.records, req.body);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.toString() });
+  }
+});
+
+// ─── 추가: 계량기록 저장 ──────────────────────────────
+app.post('/weighing/save', async (req, res) => {
   try {
     await appendWeighingCSV(req.body);
     res.json({ ok: true });
