@@ -88,7 +88,7 @@ async function sendFCM(title, body, topic = 'transactions') {
 const CSV_HEADER = '날짜,구분,차량,거래처,품목,총중량,공차,총중량시간,공차시간,감율,감량,인수량,단가,금액,비고';
 
 function parseWeighingCSV(text) {
-  const lines = text.replace(/^﻿/, '').trim().split('
+  const lines = text.replace(/^\uFEFF/, '').trim().split('
 ').filter(l => l.trim());
   if (lines.length < 2) return [];
   return lines.slice(1).map((line, idx) => {
@@ -111,7 +111,7 @@ function parseWeighingCSV(text) {
 async function appendWeighingCSV(b) {
   const { Readable } = require('stream');
   const text = await readFile(FILE_IDS.records_csv);
-  const clean = text.replace(/^﻿/, '');
+  const clean = text.replace(/^\uFEFF/, '');
   const row = [
     b.date||'', b.type||'매입', b.car||'', b.company||'',
     b.item||'', b.gross||0, b.tare||0,
@@ -119,7 +119,7 @@ async function appendWeighingCSV(b) {
     b.lossRate||0, b.loss||0, b.real||0,
     b.price||0, b.amount||0, b.memo||''
   ].join(',');
-  const newText = '﻿' + clean.trimEnd() + '
+  const newText = '\uFEFF' + clean.trimEnd() + '
 ' + row;
   const stream = Readable.from([newText]);
   await drive.files.update({
