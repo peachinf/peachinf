@@ -155,7 +155,6 @@ app.get('/records/json', async (req, res) => {
     const text = await readFile(FILE_IDS.records_csv);
     res.json({ records: parseWeighingCSV(text) });
   } catch (e) {
-    console.error('records/json error:', e.message, e.stack);
     res.status(500).send(e.toString());
   }
 });
