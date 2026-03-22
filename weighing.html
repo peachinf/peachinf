@@ -166,7 +166,7 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
 </div>
 
 <script>
-var SERVER = '';
+var SERVER = 'https://peachinf-16192067572.europe-west1.run.app';
 var records = [];
 
 window.onload = function() {
@@ -244,7 +244,7 @@ async function loadRecords(){
   document.getElementById('recList').innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
   document.getElementById('syncStatus').textContent='동기화 중...';
   try{
-    var res=await fetch('/records/json');
+    var res=await fetch(SERVER+'/records/json');
     var json=await res.json();
     records=json.records||[];
     document.getElementById('syncStatus').textContent=records.length+'건 · '+todayStr();
@@ -278,7 +278,7 @@ async function saveRecord(){
     memo:document.getElementById('fMemo').value.trim(),
   };
   try{
-    var res=await fetch('/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var res=await fetch(SERVER+'/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     var json=await res.json();
     if(!json.ok) throw new Error('저장 실패');
     toast('저장 완료!');
