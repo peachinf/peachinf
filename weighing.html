@@ -278,7 +278,7 @@ async function saveRecord(){
     memo:document.getElementById('fMemo').value.trim(),
   };
   try{
-    var res=await fetch(SERVER+'/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var res=await fetch(SERVER+'/weighing/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     var json=await res.json();
     if(!json.ok) throw new Error('저장 실패');
     toast('저장 완료!');
