@@ -522,18 +522,13 @@ function genBuyImg(){
 }
 
 function shareImg(canvas, filename){
-  canvas.toBlob(async function(blob){
-    if(navigator.share){
-      try{
-        await navigator.share({files:[new File([blob],filename,{type:'image/jpeg'})],title:filename});
-        return;
-      }catch(e){}
-    }
-    var url=URL.createObjectURL(blob);
+  var base64 = canvas.toDataURL('image/jpeg', 0.95);
+  if(window.AndroidShare){
+    window.AndroidShare.shareImage(base64, filename);
+  } else {
     var a=document.createElement('a');
-    a.href=url; a.download=filename; a.click();
-    setTimeout(function(){URL.revokeObjectURL(url);},1000);
-  },'image/jpeg',0.95);
+    a.href=base64; a.download=filename; a.click();
+  }
 }
 
 var _tt;
