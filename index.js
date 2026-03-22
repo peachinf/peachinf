@@ -35,7 +35,8 @@ const drive = google.drive({
 
 // ─── 파일 ID ─────────────────────────────────────────
 const FILE_IDS = {
-  records:       '1HY-D4Z7dzriFEn6ZOy9kMWajKXv9cKd7',
+  records:       '1HY-D4Z7dzriFEn6ZOy9kMWajKXv9cKd7', // 재활용 수집 (건드리지 않음)
+  weighing:      '1HY-D4Z7dzriFEn6ZOy9kMWajKXv9cKd7', // 계량기록 CSV (별도 파일 ID로 교체 필요)
   requests:      '11DU2GEJP6jz8S8VfrTYhVRruxSKaeLRR',
   sell_requests: '1LcKY3kBLGZqmpJ4naKiC6ZX9SBLczUFn',
   pricing:       '1A1F5rzzXT2H56UDwYVptDkVoW5KHqTv1',
@@ -132,7 +133,7 @@ app.get('/records', async (req, res) => {
 // ─── 추가: 계량기록 저장 ──────────────────────────────
 app.post('/records', async (req, res) => {
   try {
-    const text = await readFile(FILE_IDS.records);
+    const text = await readFile(FILE_IDS.weighing);
     const records = parseCSV(text);
     const b = req.body;
     records.push({
@@ -145,7 +146,7 @@ app.post('/records', async (req, res) => {
       price:     b.price     || 0,  amount:    b.amount    || 0,
       memo:      b.memo      || '',
     });
-    await writeCSV(FILE_IDS.records, records);
+    await writeCSV(FILE_IDS.weighing, records);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.toString() });
@@ -155,7 +156,7 @@ app.post('/records', async (req, res) => {
 // ─── 추가: 계량기록 조회 (웹앱용 JSON 반환) ──────────
 app.get('/records/json', async (req, res) => {
   try {
-    const text = await readFile(FILE_IDS.records);
+    const text = await readFile(FILE_IDS.weighing);
     res.json({ records: parseCSV(text) });
   } catch (e) {
     res.status(500).send(e.toString());
