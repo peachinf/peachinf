@@ -121,8 +121,7 @@ async function appendWeighingCSV(b) {
     b.lossRate||0, b.loss||0, b.real||0,
     b.price||0, b.amount||0, b.memo||''
   ].join(',');
-  const newText = clean.trimEnd() + '
-' + row;
+  const newText = clean.trimEnd() + String.fromCharCode(10) + row;
   const stream = Readable.from([newText]);
   await drive.files.update({
     fileId: FILE_IDS.records_csv,
