@@ -5,6 +5,15 @@ const admin = require('firebase-admin');
 const app = express();
 app.use(express.json());
 
+// ─── CORS (계량 웹앱용) ───────────────────────────────
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
+
 // ─── Firebase Admin 초기화 ────────────────────────────
 let serviceAccount;
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
@@ -73,11 +82,81 @@ async function sendFCM(title, body, topic = 'transactions') {
   }
 }
 
+// ─── CSV 파싱/쓰기 (계량기록용) ──────────────────────
+const CSV_HEADER = '날짜,구분,차량,거래처,품목,총중량,공차,총중량시간,공차시간,감율,감량,인수량,단가,금액,비고';
+
+function parseCSV(text) {
+  const lines = text.replace(/^\uFEFF/, '').trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+  return lines.slice(1).map((line, idx) => {
+    const c = line.split(',');
+    while (c.length < 15) c.push('');
+    return {
+      id:        `${idx}_${c[0]}_${c[2]}`,
+      date:      c[0].trim(),  type:      c[1].trim(),
+      car:       c[2].trim(),  company:   c[3].trim(),
+      item:      c[4].trim(),  gross:     c[5].trim(),
+      tare:      c[6].trim(),  grossTime: c[7].trim(),
+      tareTime:  c[8].trim(),  lossRate:  c[9].trim(),
+      loss:      c[10].trim(), real:      c[11].trim(),
+      price:     c[12].trim(), amount:    c[13].trim(),
+      memo:      c[14].trim(),
+    };
+  });
+}
+
+async function writeCSV(fileId, records) {
+  const { Readable } = require('stream');
+  const rows = records.map(r =>
+    [r.date,r.type,r.car,r.company,r.item,r.gross,r.tare,
+     r.grossTime,r.tareTime,r.lossRate,r.loss,r.real,r.price,r.amount,r.memo].join(',')
+  );
+  const body = '\uFEFF' + CSV_HEADER + '\n' + rows.join('\n');
+  const stream = Readable.from([body]);
+  await drive.files.update({
+    fileId,
+    media: { mimeType: 'text/csv', body: stream }
+  });
+}
+
 // ─── 기존: 일정 (records) ────────────────────────────
 app.get('/records', async (req, res) => {
   try {
     const data = await readFile(FILE_IDS.records);
     res.send(data);
+  } catch (e) {
+    res.status(500).send(e.toString());
+  }
+});
+
+// ─── 추가: 계량기록 저장 ──────────────────────────────
+app.post('/records', async (req, res) => {
+  try {
+    const text = await readFile(FILE_IDS.records);
+    const records = parseCSV(text);
+    const b = req.body;
+    records.push({
+      date:      b.date      || '', type:      b.type      || '매입',
+      car:       b.car       || '', company:   b.company   || '',
+      item:      b.item      || '', gross:     b.gross     || 0,
+      tare:      b.tare      || 0,  grossTime: b.grossTime || '',
+      tareTime:  b.tareTime  || '', lossRate:  b.lossRate  || 0,
+      loss:      b.loss      || 0,  real:      b.real      || 0,
+      price:     b.price     || 0,  amount:    b.amount    || 0,
+      memo:      b.memo      || '',
+    });
+    await writeCSV(FILE_IDS.records, records);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.toString() });
+  }
+});
+
+// ─── 추가: 계량기록 조회 (웹앱용 JSON 반환) ──────────
+app.get('/records/json', async (req, res) => {
+  try {
+    const text = await readFile(FILE_IDS.records);
+    res.json({ records: parseCSV(text) });
   } catch (e) {
     res.status(500).send(e.toString());
   }
@@ -441,6 +520,11 @@ app.delete('/inquiries/:id', async (req, res) => {
   } catch (e) {
     res.status(500).send(e.toString());
   }
+});
+
+// ─── 계량 웹앱 ────────────────────────────────────────
+app.get('/weighing', (req, res) => {
+  res.sendFile(__dirname + '/weighing.html');
 });
 
 app.listen(process.env.PORT || 8080);
