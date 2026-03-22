@@ -100,12 +100,12 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
       <tr>
         <td class="fl">총중량</td>
         <td style="padding:3px 4px 3px 0;"><input type="time" id="fGrossTime" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;"></td>
-        <td style="padding:3px 0;"><input type="number" id="fGross" inputmode="numeric" placeholder="0" oninput="calcAll()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;"></td>
+        <td style="padding:3px 0;"><input type="number" id="fGross" inputmode="numeric" placeholder="0" oninput="onGrossInput()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;"></td>
       </tr>
       <tr>
         <td class="fl">공차중량</td>
         <td style="padding:3px 4px 3px 0;"><input type="time" id="fTareTime" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;"></td>
-        <td style="padding:3px 0;"><input type="number" id="fTare" inputmode="numeric" placeholder="0" oninput="calcAll()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;"></td>
+        <td style="padding:3px 0;"><input type="number" id="fTare" inputmode="numeric" placeholder="0" oninput="onTareInput()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;"></td>
       </tr>
       <tr>
         <td class="fl">감량</td>
@@ -193,6 +193,18 @@ function switchTab(i){
 }
 
 var _sync=false;
+function onGrossInput(){
+  var now=new Date();
+  var gt=document.getElementById('fGrossTime');
+  if(!gt.value) gt.value=hhmm(now);
+  calcAll();
+}
+function onTareInput(){
+  var now=new Date();
+  var tt=document.getElementById('fTareTime');
+  if(!tt.value) tt.value=hhmm(now);
+  calcAll();
+}
 function calcAll(){
   var g=pn(document.getElementById('fGross').value);
   var t=pn(document.getElementById('fTare').value);
@@ -219,7 +231,6 @@ function onLossInput(){
 
 function resetForm(){
   var now=new Date();
-  document.getElementById('fType').value='매입';
   document.getElementById('fDate').value=todayStr();
   document.getElementById('fGrossTime').value=hhmm(now);
   document.getElementById('fTareTime').value='';
@@ -316,7 +327,7 @@ function renderList(){
 function loadToForm(id){
   var r=records.find(function(x){return String(x.id)===String(id);});
   if(!r) return;
-  document.getElementById('fType').value=r.type||'매입';
+
   document.getElementById('fDate').value=r.date||'';
   document.getElementById('fCar').value=r.car||'';
   document.getElementById('fCompany').value=r.company||'';
