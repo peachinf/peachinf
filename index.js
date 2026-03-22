@@ -36,7 +36,8 @@ const drive = google.drive({
 // ─── 파일 ID ─────────────────────────────────────────
 const FILE_IDS = {
   records:       '1HY-D4Z7dzriFEn6ZOy9kMWajKXv9cKd7', // 재활용 수집 (건드리지 않음)
-  weighing:      '1HY-D4Z7dzriFEn6ZOy9kMWajKXv9cKd7', // 계량기록 CSV (별도 파일 ID로 교체 필요)
+  records_csv:   '1SxFpdgxaOUGIkW6dCwPdPeUK1z3ddm_E', // 계량기록 CSV
+  weighing:      '1DxNdF8BRnDce_PYb-dspFbvQhGLTb4tc', // 계량기록 JSON
   requests:      '11DU2GEJP6jz8S8VfrTYhVRruxSKaeLRR',
   sell_requests: '1LcKY3kBLGZqmpJ4naKiC6ZX9SBLczUFn',
   pricing:       '1A1F5rzzXT2H56UDwYVptDkVoW5KHqTv1',
@@ -83,17 +84,18 @@ async function sendFCM(title, body, topic = 'transactions') {
   }
 }
 
-// ─── CSV 파싱/쓰기 (계량기록용) ──────────────────────
+// ─── 계량기록 CSV 파싱/쓰기 ─────────────────────────
 const CSV_HEADER = '날짜,구분,차량,거래처,품목,총중량,공차,총중량시간,공차시간,감율,감량,인수량,단가,금액,비고';
 
-function parseCSV(text) {
-  const lines = text.replace(/^\uFEFF/, '').trim().split('\n').filter(l => l.trim());
+function parseWeighingCSV(text) {
+  const lines = text.replace(/^﻿/, '').trim().split('
+').filter(l => l.trim());
   if (lines.length < 2) return [];
   return lines.slice(1).map((line, idx) => {
     const c = line.split(',');
     while (c.length < 15) c.push('');
     return {
-      id:        `${idx}_${c[0]}_${c[2]}`,
+      id:        `${idx}_${c[0].trim()}_${c[2].trim()}`,
       date:      c[0].trim(),  type:      c[1].trim(),
       car:       c[2].trim(),  company:   c[3].trim(),
       item:      c[4].trim(),  gross:     c[5].trim(),
@@ -106,16 +108,22 @@ function parseCSV(text) {
   });
 }
 
-async function writeCSV(fileId, records) {
+async function appendWeighingCSV(b) {
   const { Readable } = require('stream');
-  const rows = records.map(r =>
-    [r.date,r.type,r.car,r.company,r.item,r.gross,r.tare,
-     r.grossTime,r.tareTime,r.lossRate,r.loss,r.real,r.price,r.amount,r.memo].join(',')
-  );
-  const body = '\uFEFF' + CSV_HEADER + '\n' + rows.join('\n');
-  const stream = Readable.from([body]);
+  const text = await readFile(FILE_IDS.records_csv);
+  const clean = text.replace(/^﻿/, '');
+  const row = [
+    b.date||'', b.type||'매입', b.car||'', b.company||'',
+    b.item||'', b.gross||0, b.tare||0,
+    b.grossTime||'', b.tareTime||'',
+    b.lossRate||0, b.loss||0, b.real||0,
+    b.price||0, b.amount||0, b.memo||''
+  ].join(',');
+  const newText = '﻿' + clean.trimEnd() + '
+' + row;
+  const stream = Readable.from([newText]);
   await drive.files.update({
-    fileId,
+    fileId: FILE_IDS.records_csv,
     media: { mimeType: 'text/csv', body: stream }
   });
 }
