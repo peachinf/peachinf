@@ -3,19 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <title>계량 프로그램</title>
 <style>
-:root {
-  --blue:#1565C0;--blue-lt:#E3F2FD;--blue-dk:#0D47A1;
-  --green:#2E7D32;--red:#C62828;
-  --gray:#f5f6f8;--border:#e8eaed;--text:#1a1a2e;--sub:#6b7280;
-  --white:#ffffff;--radius:10px;--shadow:0 1px 4px rgba(0,0,0,.10);
-}
+:root{--blue:#1565C0;--blue-lt:#E3F2FD;--green:#2E7D32;--red:#C62828;--gray:#f5f6f8;--border:#e8eaed;--text:#1a1a2e;--sub:#6b7280;--white:#fff;--radius:10px;--shadow:0 1px 4px rgba(0,0,0,.10)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:'Malgun Gothic',-apple-system,BlinkMacSystemFont,'Noto Sans KR',sans-serif;background:var(--gray);color:var(--text);font-size:15px;min-height:100vh}
-.header{background:var(--blue);color:white;padding:14px 16px 12px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:200}
+body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray);color:var(--text);font-size:15px;min-height:100vh}
+.header{background:var(--blue);color:white;padding:14px 16px 12px;position:sticky;top:0;z-index:200}
 .header-title{font-size:17px;font-weight:700}
 .header-sub{font-size:11px;opacity:.75;margin-top:1px}
 .tabs{display:flex;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:190}
@@ -28,8 +21,8 @@ body{font-family:'Malgun Gothic',-apple-system,BlinkMacSystemFont,'Noto Sans KR'
 .card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:10px}
 .fg{margin-bottom:10px}
 .fg:last-child{margin-bottom:0}
-.fg label{display:block;font-size:11px;font-weight:700;color:var(--sub);margin-bottom:5px;letter-spacing:.3px}
-.fg input,.fg select{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;color:var(--text);background:var(--white);-webkit-appearance:none;transition:border-color .15s;font-family:inherit}
+.fg label{display:block;font-size:11px;font-weight:700;color:var(--sub);margin-bottom:5px}
+.fg input,.fg select{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;color:var(--text);background:var(--white);-webkit-appearance:none;font-family:inherit}
 .fg input:focus,.fg select:focus{outline:none;border-color:var(--blue)}
 .fg input[readonly]{background:#f8faff;color:var(--blue);font-weight:700}
 .fg input.right{text-align:right}
@@ -38,7 +31,7 @@ body{font-family:'Malgun Gothic',-apple-system,BlinkMacSystemFont,'Noto Sans KR'
 .row .fg{flex:1}
 .row .fg.w1{flex:1}
 .row .fg.w2{flex:2}
-.btn{display:block;width:100%;padding:14px;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;transition:opacity .1s,transform .1s;user-select:none}
+.btn{display:block;width:100%;padding:14px;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;text-align:center;user-select:none}
 .btn:active{opacity:.8;transform:scale(.98)}
 .btn-blue{background:var(--blue);color:white}
 .btn-green{background:var(--green);color:white}
@@ -74,14 +67,12 @@ body{font-family:'Malgun Gothic',-apple-system,BlinkMacSystemFont,'Noto Sans KR'
 <body>
 <div class="toast" id="toast"></div>
 <div class="header">
-  <div>
-    <div class="header-title">⚖ 계량 프로그램</div>
-    <div class="header-sub" id="syncStatus">서버 연결 중...</div>
-  </div>
+  <div class="header-title">&#9878; 계량 프로그램</div>
+  <div class="header-sub" id="syncStatus">서버 연결 중...</div>
 </div>
 <div class="tabs">
   <div class="tab on" id="tab0" onclick="switchTab(0)">계량등록</div>
-  <div class="tab"    id="tab1" onclick="switchTab(1)">계량기록</div>
+  <div class="tab" id="tab1" onclick="switchTab(1)">계량기록</div>
 </div>
 
 <!-- 탭0: 계량등록 -->
@@ -96,9 +87,8 @@ body{font-family:'Malgun Gothic',-apple-system,BlinkMacSystemFont,'Noto Sans KR'
     </div>
     <div class="fg"><label>차량번호</label><input type="text" id="fCar" placeholder="12가 3456" autocomplete="off"></div>
     <div class="fg"><label>거래처</label><input type="text" id="fCompany" placeholder="거래처명" autocomplete="off"></div>
-    <div class="fg"><label>품목</label><input type="text" id="fItem" placeholder="고철 · 비철 · 파지 ..." autocomplete="off"></div>
+    <div class="fg"><label>품목</label><input type="text" id="fItem" placeholder="고철 · 비철 · 파지" autocomplete="off"></div>
   </div>
-
   <div class="sec-label">중량</div>
   <div class="card">
     <div class="row">
@@ -114,7 +104,6 @@ body{font-family:'Malgun Gothic',-apple-system,BlinkMacSystemFont,'Noto Sans KR'
       <div class="fg w2"><label>감량 (kg)</label><input type="number" id="fLoss" class="right" inputmode="numeric" placeholder="0" oninput="onLossInput()"></div>
     </div>
   </div>
-
   <div class="sec-label">금액</div>
   <div class="card">
     <div class="row">
@@ -124,7 +113,6 @@ body{font-family:'Malgun Gothic',-apple-system,BlinkMacSystemFont,'Noto Sans KR'
     <div class="fg"><label>금액 (원)</label><input type="text" id="fAmount" class="big" readonly></div>
     <div class="fg"><label>비고</label><input type="text" id="fMemo" autocomplete="off"></div>
   </div>
-
   <div class="btn-row">
     <button class="btn btn-gray" style="flex:1" onclick="resetForm()">초기화</button>
     <button class="btn btn-blue" style="flex:2" onclick="saveRecord()">저장</button>
@@ -158,15 +146,15 @@ body{font-family:'Malgun Gothic',-apple-system,BlinkMacSystemFont,'Noto Sans KR'
 </div>
 
 <script>
-const SERVER = 'https://peachinf-16192067572.europe-west1.run.app';
-let records = [], editId = null;
+var SERVER = '';
+var records = [];
 
-window.onload = () => {
-  const today = todayStr(), now = new Date();
-  document.getElementById('fDate').value      = today;
+window.onload = function() {
+  var today = todayStr(), now = new Date();
+  document.getElementById('fDate').value = today;
   document.getElementById('fGrossTime').value = hhmm(now);
-  document.getElementById('sFrom').value      = today.slice(0,7)+'-01';
-  document.getElementById('sTo').value        = today;
+  document.getElementById('sFrom').value = today.slice(0,7)+'-01';
+  document.getElementById('sTo').value = today;
   loadRecords();
 };
 
@@ -177,47 +165,46 @@ function pn(s){ return parseFloat(String(s||0).replace(/,/g,''))||0; }
 function fmt(v){ return v?Number(v).toLocaleString('ko-KR'):'0'; }
 
 function switchTab(i){
-  [0,1].forEach(j=>{
+  [0,1].forEach(function(j){
     document.getElementById('tab'+j).classList.toggle('on',i===j);
     document.getElementById('page'+j).classList.toggle('on',i===j);
   });
   if(i===1) renderList();
 }
 
-let _sync=false;
+var _sync=false;
 function calcAll(){
-  const g=pn(document.getElementById('fGross').value);
-  const t=pn(document.getElementById('fTare').value);
-  const l=pn(document.getElementById('fLoss').value);
-  const real=Math.max(g-t-l,0);
-  const p=pn(document.getElementById('fPrice').value);
-  document.getElementById('fReal').value   = real?fmt(real):'';
-  document.getElementById('fAmount').value = (real&&p)?fmt(real*p):'';
+  var g=pn(document.getElementById('fGross').value);
+  var t=pn(document.getElementById('fTare').value);
+  var l=pn(document.getElementById('fLoss').value);
+  var real=Math.max(g-t-l,0);
+  var p=pn(document.getElementById('fPrice').value);
+  document.getElementById('fReal').value=real?fmt(real):'';
+  document.getElementById('fAmount').value=(real&&p)?fmt(real*p):'';
 }
 function onRateInput(){
   if(_sync)return; _sync=true;
-  const base=pn(document.getElementById('fGross').value)-pn(document.getElementById('fTare').value);
-  const rate=pn(document.getElementById('fLossRate').value);
+  var base=pn(document.getElementById('fGross').value)-pn(document.getElementById('fTare').value);
+  var rate=pn(document.getElementById('fLossRate').value);
   if(base>0) document.getElementById('fLoss').value=Math.round(base*rate/100)||'';
   calcAll(); _sync=false;
 }
 function onLossInput(){
   if(_sync)return; _sync=true;
-  const base=pn(document.getElementById('fGross').value)-pn(document.getElementById('fTare').value);
-  const loss=pn(document.getElementById('fLoss').value);
+  var base=pn(document.getElementById('fGross').value)-pn(document.getElementById('fTare').value);
+  var loss=pn(document.getElementById('fLoss').value);
   if(base>0) document.getElementById('fLossRate').value=Math.round(loss/base*100)||0;
   calcAll(); _sync=false;
 }
 
 function resetForm(){
-  editId=null;
-  const now=new Date();
+  var now=new Date();
   document.getElementById('fType').value='매입';
   document.getElementById('fDate').value=todayStr();
   document.getElementById('fGrossTime').value=hhmm(now);
   document.getElementById('fTareTime').value='';
-  ['fCar','fCompany','fItem','fMemo'].forEach(id=>document.getElementById(id).value='');
-  ['fGross','fTare','fLossRate','fLoss','fPrice'].forEach(id=>document.getElementById(id).value='');
+  ['fCar','fCompany','fItem','fMemo'].forEach(function(id){document.getElementById(id).value='';});
+  ['fGross','fTare','fLossRate','fLoss','fPrice'].forEach(function(id){document.getElementById(id).value='';});
   document.getElementById('fReal').value='';
   document.getElementById('fAmount').value='';
 }
@@ -226,27 +213,27 @@ async function loadRecords(){
   document.getElementById('recList').innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
   document.getElementById('syncStatus').textContent='동기화 중...';
   try{
-    const res=await fetch(SERVER+'/records/json');
-    const json=await res.json();
+    var res=await fetch('/records/json');
+    var json=await res.json();
     records=json.records||[];
     document.getElementById('syncStatus').textContent=records.length+'건 · '+todayStr();
     renderList();
   }catch(e){
     document.getElementById('syncStatus').textContent='연결 실패';
-    document.getElementById('recList').innerHTML='<div class="empty">서버 연결 실패<br><small>'+e.message+'</small></div>';
+    document.getElementById('recList').innerHTML='<div class="empty">서버 연결 실패</div>';
     toast('서버 연결 실패');
   }
 }
 
 async function saveRecord(){
-  const car=document.getElementById('fCar').value.trim();
-  const comp=document.getElementById('fCompany').value.trim();
+  var car=document.getElementById('fCar').value.trim();
+  var comp=document.getElementById('fCompany').value.trim();
   if(!car||!comp){toast('차량번호와 거래처를 입력하세요');return;}
-  const now=new Date();
-  const body={
+  var now=new Date();
+  var body={
     date:document.getElementById('fDate').value,
     type:document.getElementById('fType').value,
-    car, company:comp,
+    car:car, company:comp,
     item:document.getElementById('fItem').value.trim(),
     gross:pn(document.getElementById('fGross').value),
     tare:pn(document.getElementById('fTare').value),
@@ -260,56 +247,55 @@ async function saveRecord(){
     memo:document.getElementById('fMemo').value.trim(),
   };
   try{
-    const res=await fetch(SERVER+'/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const json=await res.json();
+    var res=await fetch('/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var json=await res.json();
     if(!json.ok) throw new Error('저장 실패');
     toast('저장 완료!');
     resetForm();
     await loadRecords();
-  }catch(e){ toast('저장 실패: '+e.message); }
+  }catch(e){toast('저장 실패: '+e.message);}
 }
 
 function renderList(){
-  const from=document.getElementById('sFrom').value;
-  const to=document.getElementById('sTo').value;
-  const type=document.getElementById('sType').value;
-  const kw=(document.getElementById('sKw').value||'').trim().toLowerCase();
-  const filtered=records.filter(r=>{
+  var from=document.getElementById('sFrom').value;
+  var to=document.getElementById('sTo').value;
+  var type=document.getElementById('sType').value;
+  var kw=(document.getElementById('sKw').value||'').trim().toLowerCase();
+  var filtered=records.filter(function(r){
     if(!r.date) return false;
     if(from&&r.date<from) return false;
     if(to&&r.date>to) return false;
     if(type!=='전체'&&r.type!==type) return false;
     if(kw&&![r.car,r.company,r.item,r.memo].join(' ').toLowerCase().includes(kw)) return false;
     return true;
-  }).sort((a,b)=>((b.date||'')+(b.id||''))>((a.date||'')+(a.id||''))?1:-1);
+  }).sort(function(a,b){return ((b.date||'')+(b.id||''))>((a.date||'')+(a.id||''))?1:-1;});
 
-  const tR=filtered.reduce((s,r)=>s+(Number(r.real)||0),0);
-  const tA=filtered.reduce((s,r)=>s+(Number(r.amount)||0),0);
+  var tR=filtered.reduce(function(s,r){return s+(Number(r.real)||0);},0);
+  var tA=filtered.reduce(function(s,r){return s+(Number(r.amount)||0);},0);
   document.getElementById('sumBar').textContent=filtered.length+'건  |  인수량 '+fmt(tR)+' kg  |  금액 '+fmt(tA)+' 원';
 
   if(!filtered.length){
     document.getElementById('recList').innerHTML='<div class="empty">해당 기간 기록 없음</div>';
     return;
   }
-  document.getElementById('recList').innerHTML=filtered.map(r=>`
-    <div class="rec" onclick="loadToForm('${r.id}')">
-      <div class="rec-top">
-        <span class="badge ${r.type==='매입'?'badge-buy':'badge-sell'}">${r.type}</span>
-        <span class="rec-date">${r.date} ${r.grossTime||''}</span>
-      </div>
-      <div class="rec-main">${r.car}</div>
-      <div class="rec-sub">${r.company}${r.item?' · '+r.item:''}</div>
-      <div class="rec-bottom">
-        <span class="rec-real">인수량 ${fmt(r.real)} kg</span>
-        <span class="rec-amount">${fmt(r.amount)} 원</span>
-      </div>
-    </div>`).join('');
+  document.getElementById('recList').innerHTML=filtered.map(function(r){
+    return '<div class="rec" onclick="loadToForm(\''+r.id+'\')">'+
+      '<div class="rec-top">'+
+      '<span class="badge '+(r.type==='매입'?'badge-buy':'badge-sell')+'">'+r.type+'</span>'+
+      '<span class="rec-date">'+r.date+' '+(r.grossTime||'')+'</span>'+
+      '</div>'+
+      '<div class="rec-main">'+r.car+'</div>'+
+      '<div class="rec-sub">'+r.company+(r.item?' · '+r.item:'')+'</div>'+
+      '<div class="rec-bottom">'+
+      '<span class="rec-real">인수량 '+fmt(r.real)+' kg</span>'+
+      '<span class="rec-amount">'+fmt(r.amount)+' 원</span>'+
+      '</div></div>';
+  }).join('');
 }
 
 function loadToForm(id){
-  const r=records.find(x=>String(x.id)===String(id));
+  var r=records.find(function(x){return String(x.id)===String(id);});
   if(!r) return;
-  editId=r.id;
   document.getElementById('fType').value=r.type||'매입';
   document.getElementById('fDate').value=r.date||'';
   document.getElementById('fCar').value=r.car||'';
@@ -326,174 +312,235 @@ function loadToForm(id){
   calcAll();
   switchTab(0);
   window.scrollTo(0,0);
-  toast('기록 불러옴 — 수정 후 저장');
+  toast('기록 불러옴');
 }
 
-function mkCanvas(w,h){const cv=document.createElement('canvas');cv.width=w;cv.height=h;return cv;}
+function mkCanvas(w,h){var cv=document.createElement('canvas');cv.width=w;cv.height=h;return cv;}
 
+// ─── 계근사진 (계량증명서 양식) ──────────────────────
 function genCertImg(){
-  const date=document.getElementById('fDate').value;
-  const car=document.getElementById('fCar').value.trim()||'-';
-  const company=document.getElementById('fCompany').value.trim()||'-';
-  const item=document.getElementById('fItem').value.trim()||'-';
-  const gross=pn(document.getElementById('fGross').value);
-  const grossTime=document.getElementById('fGrossTime').value;
-  const tare=pn(document.getElementById('fTare').value);
-  const tareTime=document.getElementById('fTareTime').value;
-  const loss=pn(document.getElementById('fLoss').value);
-  const real=pn(document.getElementById('fReal').value.replace(/,/g,''));
-  const price=pn(document.getElementById('fPrice').value);
-  const amount=pn(document.getElementById('fAmount').value.replace(/,/g,''));
-  const memo=document.getElementById('fMemo').value.trim();
+  var date=document.getElementById('fDate').value;
+  var car=document.getElementById('fCar').value.trim()||'-';
+  var company=document.getElementById('fCompany').value.trim()||'-';
+  var item=document.getElementById('fItem').value.trim()||'-';
+  var gross=pn(document.getElementById('fGross').value);
+  var grossTime=document.getElementById('fGrossTime').value;
+  var tare=pn(document.getElementById('fTare').value);
+  var tareTime=document.getElementById('fTareTime').value;
+  var loss=pn(document.getElementById('fLoss').value);
+  var real=pn(document.getElementById('fReal').value.replace(/,/g,''));
+  var price=pn(document.getElementById('fPrice').value);
+  var amount=pn(document.getElementById('fAmount').value.replace(/,/g,''));
+  var memo=document.getElementById('fMemo').value.trim();
 
-  const W=720,ROW=46,LW=130;
-  const ROWS=[
-    ['날    짜',date],
-    ['차량번호',car],
-    ['거 래 처',company],
-    ['품    목',item],
-    ['총 중 량',grossTime+'   '+fmt(gross)+' kg'],
-    ['공차중량',tareTime+'   '+fmt(tare)+' kg'],
-    ['감    량',fmt(loss)+' kg'],
-    ['인 수 량',fmt(real)+' kg'],
-    ['단    가',fmt(price)+' 원/kg'],
-    ['금    액',fmt(amount)+' 원'],
-    ['비    고',memo||'-'],
+  var W=640, LW=160, ROW=44;
+  var ROWS=[
+    ['일     자', date],
+    ['차량번호', car],
+    ['거 래 처', company],
+    ['품     명', item],
+    ['총 중 량', grossTime+'  '+fmt(gross)+' kg'],
+    ['공     차', tareTime+'  '+fmt(tare)+' kg'],
+    ['감     량', fmt(loss)+' kg'],
+    ['인 수 량', fmt(real)+' kg'],
+    ['단     가', fmt(price)+' 원/kg'],
+    ['금     액', fmt(amount)+' 원'],
+    ['비     고', memo||''],
   ];
-  const H=68+ROWS.length*ROW+28;
-  const cv=mkCanvas(W,H);
-  const cx=cv.getContext('2d');
+  var H = 70 + ROWS.length*ROW + 120;
+  var cv=mkCanvas(W,H), cx=cv.getContext('2d');
 
+  // 배경
   cx.fillStyle='#fff'; cx.fillRect(0,0,W,H);
-  cx.fillStyle='#1565C0'; cx.fillRect(0,0,W,58);
-  cx.fillStyle='#fff';
-  cx.font='bold 26px Malgun Gothic,sans-serif';
-  cx.textAlign='center'; cx.fillText('계  근  표',W/2,38);
-  cx.fillStyle='rgba(255,255,255,0.7)';
-  cx.font='12px Malgun Gothic,sans-serif';
-  cx.fillText('재달',W/2,54);
 
-  ROWS.forEach(([lbl,val],i)=>{
-    const y=68+i*ROW;
-    const isAmt=lbl.includes('금    액');
-    cx.fillStyle=i%2===0?'#f7f9fd':'#fff'; cx.fillRect(0,y,W,ROW);
-    cx.fillStyle='#dce8f7'; cx.fillRect(0,y,LW,ROW);
-    cx.strokeStyle='#d0dae9'; cx.lineWidth=0.7;
-    cx.strokeRect(0,y,W,ROW);
-    cx.beginPath(); cx.moveTo(LW,y); cx.lineTo(LW,y+ROW); cx.stroke();
-    cx.fillStyle='#2c4a7c';
-    cx.font='bold 13px Malgun Gothic,sans-serif';
-    cx.textAlign='center'; cx.fillText(lbl,LW/2,y+ROW/2+5);
+  // 외곽 테두리
+  cx.strokeStyle='#1a1a2e'; cx.lineWidth=2;
+  cx.strokeRect(10,10,W-20,H-20);
+
+  // 제목
+  cx.fillStyle='#1a1a2e';
+  cx.font='bold 24px sans-serif';
+  cx.textAlign='center';
+  cx.fillText('계  량  증  명  서', W/2, 46);
+
+  cx.font='12px sans-serif';
+  cx.fillText('(공급자 보관용)', W/2, 62);
+
+  // 테이블
+  var TY=74;
+  ROWS.forEach(function(row,i){
+    var lbl=row[0], val=row[1], y=TY+i*ROW;
+    var isAmt=lbl.indexOf('금     액')>=0;
+
+    cx.fillStyle=i%2===0?'#f8f8f8':'#fff';
+    cx.fillRect(12,y,W-24,ROW);
+
+    // 레이블 배경
+    cx.fillStyle='#e8eaed';
+    cx.fillRect(12,y,LW,ROW);
+
+    // 구분선
+    cx.strokeStyle='#ccc'; cx.lineWidth=0.8;
+    cx.strokeRect(12,y,W-24,ROW);
+    cx.beginPath(); cx.moveTo(12+LW,y); cx.lineTo(12+LW,y+ROW); cx.stroke();
+
+    // 레이블
+    cx.fillStyle='#333';
+    cx.font='bold 14px sans-serif';
+    cx.textAlign='center';
+    cx.fillText(lbl, 12+LW/2, y+ROW/2+5);
+
+    // 값
     cx.fillStyle=isAmt?'#1565C0':'#1a1a2e';
-    cx.font=isAmt?'bold 20px Malgun Gothic,sans-serif':'15px Malgun Gothic,sans-serif';
+    cx.font=isAmt?'bold 18px sans-serif':'15px sans-serif';
     cx.textAlign=isAmt?'right':'left';
-    cx.fillText(val,isAmt?W-18:LW+14,y+ROW/2+5);
+    cx.fillText(val, isAmt?W-20:12+LW+12, y+ROW/2+5);
   });
 
-  cx.fillStyle='#1565C0'; cx.fillRect(0,68+ROWS.length*ROW,W,26);
-  cx.fillStyle='#fff'; cx.font='12px Malgun Gothic,sans-serif';
-  cx.textAlign='center';
-  cx.fillText('출력: '+new Date().toLocaleString('ko-KR'),W/2,68+ROWS.length*ROW+17);
+  // 하단 업체 정보
+  var BY = TY + ROWS.length*ROW + 14;
+  cx.strokeStyle='#ccc'; cx.lineWidth=0.8;
+  cx.beginPath(); cx.moveTo(12,BY); cx.lineTo(W-12,BY); cx.stroke();
 
-  share(cv,'계근표_'+car+'_'+date+'.jpg');
+  cx.fillStyle='#333';
+  cx.font='bold 14px sans-serif';
+  cx.textAlign='center';
+  cx.fillText('대성자원(재달)', W/2, BY+22);
+
+  cx.font='12px sans-serif';
+  cx.fillText('주소 : 전남 순천시 주암면 광천리 215', W/2, BY+40);
+  cx.fillText('HP : 010-5773-1520    Fax : 0504-428-1520', W/2, BY+56);
+
+  cx.fillStyle='#666';
+  cx.font='11px sans-serif';
+  cx.fillText('필히 재확인 하십시오. ( 단위 : kg , 단가 : 원/kg )', W/2, BY+76);
+  cx.fillText('확인 후 중량의 변동에 대한 책임은 본 업소에는 없습니다.', W/2, BY+92);
+
+  shareImg(cv, '계근표_'+car+'_'+date+'.jpg');
 }
 
+// ─── 매입사진 (매입명세서 양식) ──────────────────────
 function genBuyImg(){
-  const from=document.getElementById('sFrom').value||todayStr().slice(0,7)+'-01';
-  const to=document.getElementById('sTo').value||todayStr();
-  const company=document.getElementById('fCompany').value.trim();
+  var from=document.getElementById('sFrom').value||todayStr().slice(0,7)+'-01';
+  var to=document.getElementById('sTo').value||todayStr();
+  var company=document.getElementById('fCompany').value.trim();
 
-  const target=records.filter(r=>
-    r.type==='매입'&&
-    (!from||r.date>=from)&&
-    (!to||r.date<=to)&&
-    (!company||r.company.includes(company))
-  ).sort((a,b)=>a.date>b.date?1:-1);
+  var target=records.filter(function(r){
+    return r.type==='매입'&&
+      (!from||r.date>=from)&&
+      (!to||r.date<=to)&&
+      (!company||r.company.indexOf(company)>=0);
+  }).sort(function(a,b){return a.date>b.date?1:-1;});
 
   if(!target.length){toast('매입 기록 없음');return;}
 
-  const COLS=[
-    {h:'날짜',w:105,key:'date',align:'center'},
-    {h:'차량번호',w:95,key:'car',align:'center'},
-    {h:'거래처',w:135,key:'company',align:'center'},
-    {h:'품목',w:75,key:'item',align:'center'},
-    {h:'총중량',w:85,key:'gross',align:'right',num:true},
-    {h:'공차',w:85,key:'tare',align:'right',num:true},
-    {h:'인수량',w:85,key:'real',align:'right',num:true},
-    {h:'단가',w:80,key:'price',align:'right',num:true},
-    {h:'금액',w:105,key:'amount',align:'right',num:true},
+  var COLS=[
+    {h:'일자',      w:100, key:'date',    align:'center'},
+    {h:'차량번호',  w:85,  key:'car',     align:'center'},
+    {h:'거래처',    w:120, key:'company', align:'center'},
+    {h:'품목',      w:70,  key:'item',    align:'center'},
+    {h:'총중량',    w:80,  key:'gross',   align:'right', num:true},
+    {h:'공차',      w:80,  key:'tare',    align:'right', num:true},
+    {h:'감량',      w:70,  key:'loss',    align:'right', num:true},
+    {h:'인수량',    w:80,  key:'real',    align:'right', num:true},
+    {h:'단가',      w:70,  key:'price',   align:'right', num:true},
+    {h:'금액',      w:95,  key:'amount',  align:'right', num:true},
+    {h:'비고',      w:80,  key:'memo',    align:'left'},
   ];
-  const HDR=100,ROW=36,PAD=10;
-  const W=COLS.reduce((s,c)=>s+c.w,0)+PAD*2;
-  const H=HDR+(target.length+1)*ROW+40;
-  const cv=mkCanvas(W,H);
-  const cx=cv.getContext('2d');
+  var PAD=12, HDR=90, ROW=34;
+  var W=COLS.reduce(function(s,c){return s+c.w;},0)+PAD*2;
+  var H=HDR+(target.length+1)*ROW+20;
+
+  var cv=mkCanvas(W,H), cx=cv.getContext('2d');
   cx.fillStyle='#fff'; cx.fillRect(0,0,W,H);
 
-  cx.fillStyle='#1565C0'; cx.fillRect(0,0,W,55);
-  cx.fillStyle='#fff';
-  cx.font='bold 24px Malgun Gothic,sans-serif';
-  cx.textAlign='center'; cx.fillText('매  입  명  세  서',W/2,37);
+  // 외곽 테두리
+  cx.strokeStyle='#1a1a2e'; cx.lineWidth=2;
+  cx.strokeRect(8,8,W-16,H-16);
 
-  cx.fillStyle='#1a1a2e'; cx.font='13px Malgun Gothic,sans-serif';
-  cx.textAlign='left';
-  cx.fillText('기간: '+from+' ~ '+to+(company?'   거래처: '+company:''),PAD,78);
+  // 제목
+  cx.fillStyle='#1a1a2e';
+  cx.font='bold 22px sans-serif';
+  cx.textAlign='center';
+  cx.fillText('매  입  명  세  서', W/2, 38);
+
+  // 출력일자
+  cx.font='12px sans-serif';
   cx.textAlign='right';
-  cx.fillText('출력: '+new Date().toLocaleString('ko-KR'),W-PAD,78);
+  cx.fillText('출력일자: '+new Date().toLocaleDateString('ko-KR'), W-PAD, 58);
 
-  const xs=[PAD];
-  COLS.forEach(c=>xs.push(xs[xs.length-1]+c.w));
+  // 기간/거래처
+  cx.textAlign='left';
+  cx.fillText('기간: '+from+' ~ '+to+(company?'   거래처: '+company:''), PAD, 58);
 
-  let y=HDR;
-  cx.fillStyle='#1565C0'; cx.fillRect(PAD,y,W-PAD*2,ROW);
-  cx.fillStyle='#fff'; cx.font='bold 13px Malgun Gothic,sans-serif';
-  COLS.forEach((c,i)=>{cx.textAlign='center';cx.fillText(c.h,xs[i]+c.w/2,y+ROW/2+5);});
+  // 컬럼 X
+  var xs=[PAD];
+  COLS.forEach(function(c){xs.push(xs[xs.length-1]+c.w);});
+
+  // 헤더행
+  var y=HDR;
+  cx.fillStyle='#1a1a2e';
+  cx.fillRect(PAD,y,W-PAD*2,ROW);
+  cx.fillStyle='#fff';
+  cx.font='bold 13px sans-serif';
+  COLS.forEach(function(c,i){
+    cx.textAlign='center';
+    cx.fillText(c.h, xs[i]+c.w/2, y+ROW/2+5);
+  });
   y+=ROW;
 
-  let totR=0,totA=0;
-  target.forEach((r,ri)=>{
-    cx.fillStyle=ri%2===0?'#fff':'#f7f9fd'; cx.fillRect(PAD,y,W-PAD*2,ROW);
-    cx.strokeStyle='#d8e3ee'; cx.lineWidth=0.5;
-    COLS.forEach((_,i)=>cx.strokeRect(xs[i],y,COLS[i].w,ROW));
-    cx.fillStyle='#1a1a2e'; cx.font='13px Malgun Gothic,sans-serif';
-    COLS.forEach((c,i)=>{
-      const val=c.num?fmt(r[c.key]):(r[c.key]||'');
+  var totR=0, totA=0;
+  target.forEach(function(r,ri){
+    cx.fillStyle=ri%2===0?'#fff':'#f8f8f8';
+    cx.fillRect(PAD,y,W-PAD*2,ROW);
+    cx.strokeStyle='#ccc'; cx.lineWidth=0.5;
+    COLS.forEach(function(_,i){cx.strokeRect(xs[i],y,COLS[i].w,ROW);});
+    cx.fillStyle='#1a1a2e'; cx.font='12px sans-serif';
+    COLS.forEach(function(c,i){
+      var val=c.num?fmt(r[c.key]):(r[c.key]||'');
       cx.textAlign=c.align;
-      const tx=c.align==='right'?xs[i]+c.w-6:c.align==='center'?xs[i]+c.w/2:xs[i]+6;
+      var tx=c.align==='right'?xs[i]+c.w-6:c.align==='center'?xs[i]+c.w/2:xs[i]+6;
       cx.fillText(val,tx,y+ROW/2+5);
     });
     totR+=Number(r.real)||0; totA+=Number(r.amount)||0;
     y+=ROW;
   });
 
-  cx.fillStyle='#E3F2FD'; cx.fillRect(PAD,y,W-PAD*2,ROW);
-  cx.strokeStyle='#1565C0'; cx.lineWidth=1; cx.strokeRect(PAD,y,W-PAD*2,ROW);
-  cx.fillStyle='#1565C0'; cx.font='bold 14px Malgun Gothic,sans-serif';
-  cx.textAlign='center'; cx.fillText('합 계',xs[0]+COLS[0].w/2,y+ROW/2+5);
+  // 합계행
+  cx.fillStyle='#e8eaed';
+  cx.fillRect(PAD,y,W-PAD*2,ROW);
+  cx.strokeStyle='#999'; cx.lineWidth=1;
+  cx.strokeRect(PAD,y,W-PAD*2,ROW);
+  cx.fillStyle='#1a1a2e'; cx.font='bold 13px sans-serif';
+  cx.textAlign='center';
+  cx.fillText('합 계', xs[0]+COLS[0].w/2, y+ROW/2+5);
   cx.textAlign='right';
-  cx.fillText(fmt(totR),xs[6]+COLS[6].w-6,y+ROW/2+5);
-  cx.fillText(fmt(totA),xs[8]+COLS[8].w-6,y+ROW/2+5);
+  cx.fillText(fmt(totR), xs[7]+COLS[7].w-6, y+ROW/2+5);
+  cx.fillText(fmt(totA), xs[9]+COLS[9].w-6, y+ROW/2+5);
 
-  share(cv,'매입명세서_'+from+'_'+to+'.jpg');
+  shareImg(cv, '매입명세서_'+from+'_'+to+'.jpg');
 }
 
-function share(canvas,filename){
-  canvas.toBlob(async blob=>{
+function shareImg(canvas, filename){
+  canvas.toBlob(async function(blob){
     if(navigator.share){
-      try{await navigator.share({files:[new File([blob],filename,{type:'image/jpeg'})],title:filename});return;}catch(e){}
+      try{
+        await navigator.share({files:[new File([blob],filename,{type:'image/jpeg'})],title:filename});
+        return;
+      }catch(e){}
     }
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;a.download=filename;a.click();
-    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url; a.download=filename; a.click();
+    setTimeout(function(){URL.revokeObjectURL(url);},1000);
   },'image/jpeg',0.95);
 }
 
-let _tt;
+var _tt;
 function toast(msg){
-  const el=document.getElementById('toast');
+  var el=document.getElementById('toast');
   el.textContent=msg; el.classList.add('on');
-  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('on'),2500);
+  clearTimeout(_tt); _tt=setTimeout(function(){el.classList.remove('on');},2500);
 }
 </script>
 </body>
