@@ -141,20 +141,7 @@ app.get('/records', async (req, res) => {
 // ─── 추가: 계량기록 저장 ──────────────────────────────
 app.post('/records', async (req, res) => {
   try {
-    const text = await readFile(FILE_IDS.weighing);
-    const records = parseCSV(text);
-    const b = req.body;
-    records.push({
-      date:      b.date      || '', type:      b.type      || '매입',
-      car:       b.car       || '', company:   b.company   || '',
-      item:      b.item      || '', gross:     b.gross     || 0,
-      tare:      b.tare      || 0,  grossTime: b.grossTime || '',
-      tareTime:  b.tareTime  || '', lossRate:  b.lossRate  || 0,
-      loss:      b.loss      || 0,  real:      b.real      || 0,
-      price:     b.price     || 0,  amount:    b.amount    || 0,
-      memo:      b.memo      || '',
-    });
-    await writeCSV(FILE_IDS.weighing, records);
+    await appendWeighingCSV(req.body);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.toString() });
@@ -164,8 +151,8 @@ app.post('/records', async (req, res) => {
 // ─── 추가: 계량기록 조회 (웹앱용 JSON 반환) ──────────
 app.get('/records/json', async (req, res) => {
   try {
-    const text = await readFile(FILE_IDS.weighing);
-    res.json({ records: parseCSV(text) });
+    const text = await readFile(FILE_IDS.records_csv);
+    res.json({ records: parseWeighingCSV(text) });
   } catch (e) {
     res.status(500).send(e.toString());
   }
