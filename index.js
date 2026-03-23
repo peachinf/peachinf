@@ -149,6 +149,34 @@ app.post('/records', async (req, res) => {
   }
 });
 
+// ─── 추가: 계량기록 삭제 ──────────────────────────────
+app.delete('/weighing/delete', async (req, res) => {
+  try {
+    const { date, car, grossTime } = req.body;
+    const text = await readFile(FILE_IDS.records_csv);
+    const records = parseWeighingCSV(text);
+    const filtered = records.filter(function(r) {
+      return !(r.date === date && r.car === car && r.grossTime === grossTime);
+    });
+    // 필터된 결과로 CSV 재작성
+    const { Readable } = require('stream');
+    const CSV_H = '날짜,구분,차량,거래처,품목,총중량,공차,총중량시간,공차시간,감율,감량,인수량,단가,금액,비고';
+    const rows = filtered.map(r =>
+      [r.date,r.type,r.car,r.company,r.item,r.gross,r.tare,
+       r.grossTime,r.tareTime,r.lossRate,r.loss,r.real,r.price,r.amount,r.memo].join(',')
+    );
+    const newText = CSV_H + String.fromCharCode(10) + rows.join(String.fromCharCode(10));
+    const stream = Readable.from([newText]);
+    await drive.files.update({
+      fileId: FILE_IDS.records_csv,
+      media: { mimeType: 'text/csv', body: stream }
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.toString() });
+  }
+});
+
 // ─── 추가: 계량기록 저장 ──────────────────────────────
 app.post('/weighing/save', async (req, res) => {
   try {
