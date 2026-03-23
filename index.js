@@ -37,7 +37,6 @@ const drive = google.drive({
 const FILE_IDS = {
   records:       '1y-QfCGxVR-2_NwCJUbBHpU9Yf2dApyGG', // 재활용 수집 (건드리지 않음)
   records_csv:   '1SxFpdgxaOUGIkW6dCwPdPeUK1z3ddm_E', // 계량기록 CSV
-  weighing:      '1DxNdF8BRnDce_PYb-dspFbvQhGLTb4tc', // 계량기록 JSON
   requests:      '11DU2GEJP6jz8S8VfrTYhVRruxSKaeLRR',
   sell_requests: '1LcKY3kBLGZqmpJ4naKiC6ZX9SBLczUFn',
   pricing:       '1A1F5rzzXT2H56UDwYVptDkVoW5KHqTv1',
