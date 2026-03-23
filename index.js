@@ -35,7 +35,7 @@ const drive = google.drive({
 
 // ─── 파일 ID ─────────────────────────────────────────
 const FILE_IDS = {
-  records:       '1y-QfCGxVR-2_NwCJUbBHpU9Yf2dApyGG', // 재활용 수집 (건드리지 않음)
+  records:       '1y-QfCGxVR-2_NwCJUbBHpU9Yf2dApyGG', // 재활용 수집
   records_csv:   '1SxFpdgxaOUGIkW6dCwPdPeUK1z3ddm_E', // 계량기록 CSV
   requests:      '11DU2GEJP6jz8S8VfrTYhVRruxSKaeLRR',
   sell_requests: '1LcKY3kBLGZqmpJ4naKiC6ZX9SBLczUFn',
@@ -121,10 +121,11 @@ async function appendWeighingCSV(b) {
     b.price||0, b.amount||0, b.memo||''
   ].join(',');
   const newText = clean.trimEnd() + String.fromCharCode(10) + row;
-  const stream = Readable.from([newText]);
+  const buf = Buffer.from(newText, 'utf8');
+  const stream = Readable.from([buf]);
   await drive.files.update({
     fileId: FILE_IDS.records_csv,
-    media: { mimeType: 'text/csv', body: stream }
+    media: { mimeType: 'text/csv; charset=utf-8', body: stream }
   });
 }
 
@@ -155,13 +156,9 @@ app.post('/weighing/delete', async (req, res) => {
     const text = await readFile(FILE_IDS.records_csv);
     const records = parseWeighingCSV(text);
     const filtered = records.filter(function(r) {
-      return !(
-        r.date.trim() === String(date).trim() &&
-        r.car.trim() === String(car).trim() &&
-        r.gross.trim() === String(gross).trim() &&
-        r.grossTime.trim() === String(grossTime).trim()
-      );
+      return !(r.date === date && r.car === car && String(r.gross) === String(gross) && r.grossTime === grossTime);
     });
+    // 필터된 결과로 CSV 재작성
     const { Readable } = require('stream');
     const CSV_H = '날짜,구분,차량,거래처,품목,총중량,공차,총중량시간,공차시간,감율,감량,인수량,단가,금액,비고';
     const rows = filtered.map(r =>
@@ -169,10 +166,11 @@ app.post('/weighing/delete', async (req, res) => {
        r.grossTime,r.tareTime,r.lossRate,r.loss,r.real,r.price,r.amount,r.memo].join(',')
     );
     const newText = CSV_H + String.fromCharCode(10) + rows.join(String.fromCharCode(10));
-    const stream = Readable.from([newText]);
+    const buf = Buffer.from(newText, 'utf8');
+    const stream = Readable.from([buf]);
     await drive.files.update({
       fileId: FILE_IDS.records_csv,
-      media: { mimeType: 'text/csv', body: stream }
+      media: { mimeType: 'text/csv; charset=utf-8', body: stream }
     });
     res.json({ ok: true });
   } catch (e) {
