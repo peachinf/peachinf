@@ -150,7 +150,7 @@ app.post('/records', async (req, res) => {
 });
 
 // ─── 추가: 계량기록 삭제 ──────────────────────────────
-app.delete('/weighing/delete', async (req, res) => {
+app.post('/weighing/delete', async (req, res) => {
   try {
     const { date, car, grossTime } = req.body;
     const text = await readFile(FILE_IDS.records_csv);
