@@ -153,12 +153,14 @@ app.post('/records', async (req, res) => {
 app.post('/weighing/delete', async (req, res) => {
   try {
     const { date, car, grossTime } = req.body;
+    console.log('삭제 요청:', date, car, grossTime);
     const text = await readFile(FILE_IDS.records_csv);
     const records = parseWeighingCSV(text);
+    console.log('전체 레코드 수:', records.length);
     const filtered = records.filter(function(r) {
+      console.log('비교:', r.date, r.car, r.grossTime, '===', date, car, grossTime);
       return !(r.date === date && r.car === car && r.grossTime === grossTime);
     });
-    // 필터된 결과로 CSV 재작성
     const { Readable } = require('stream');
     const CSV_H = '날짜,구분,차량,거래처,품목,총중량,공차,총중량시간,공차시간,감율,감량,인수량,단가,금액,비고';
     const rows = filtered.map(r =>
