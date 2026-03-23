@@ -121,11 +121,10 @@ async function appendWeighingCSV(b) {
     b.price||0, b.amount||0, b.memo||''
   ].join(',');
   const newText = clean.trimEnd() + String.fromCharCode(10) + row;
-  const buf = Buffer.from(newText, 'utf8');
-  const stream = Readable.from([buf]);
+  const stream = Readable.from([newText]);
   await drive.files.update({
     fileId: FILE_IDS.records_csv,
-    media: { mimeType: 'text/csv; charset=utf-8', body: stream }
+    media: { mimeType: 'text/csv', body: stream }
   });
 }
 
@@ -166,11 +165,10 @@ app.post('/weighing/delete', async (req, res) => {
        r.grossTime,r.tareTime,r.lossRate,r.loss,r.real,r.price,r.amount,r.memo].join(',')
     );
     const newText = CSV_H + String.fromCharCode(10) + rows.join(String.fromCharCode(10));
-    const buf = Buffer.from(newText, 'utf8');
-    const stream = Readable.from([buf]);
+    const stream = Readable.from([newText]);
     await drive.files.update({
       fileId: FILE_IDS.records_csv,
-      media: { mimeType: 'text/csv; charset=utf-8', body: stream }
+      media: { mimeType: 'text/csv', body: stream }
     });
     res.json({ ok: true });
   } catch (e) {
