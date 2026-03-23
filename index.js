@@ -156,7 +156,7 @@ app.post('/weighing/delete', async (req, res) => {
     const text = await readFile(FILE_IDS.records_csv);
     const records = parseWeighingCSV(text);
     const filtered = records.filter(function(r) {
-      return !(r.date === date && r.car === car && String(r.gross) === String(gross) && r.grossTime === grossTime);
+      return !(r.date === date && r.car === car && String(r.gross) === String(gross));
     });
     const { Readable } = require('stream');
     const CSV_H = '날짜,구분,차량,거래처,품목,총중량,공차,총중량시간,공차시간,감율,감량,인수량,단가,금액,비고';
