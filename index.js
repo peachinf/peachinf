@@ -152,14 +152,11 @@ app.post('/records', async (req, res) => {
 // ─── 추가: 계량기록 삭제 ──────────────────────────────
 app.post('/weighing/delete', async (req, res) => {
   try {
-    const { date, car, grossTime } = req.body;
-    console.log('삭제 요청:', date, car, grossTime);
+    const { date, car, gross, grossTime } = req.body;
     const text = await readFile(FILE_IDS.records_csv);
     const records = parseWeighingCSV(text);
-    console.log('전체 레코드 수:', records.length);
     const filtered = records.filter(function(r) {
-      console.log('비교:', r.date, r.car, r.grossTime, '===', date, car, grossTime);
-      return !(r.date === date && r.car === car && r.grossTime === grossTime);
+      return !(r.date === date && r.car === car && String(r.gross) === String(gross) && r.grossTime === grossTime);
     });
     const { Readable } = require('stream');
     const CSV_H = '날짜,구분,차량,거래처,품목,총중량,공차,총중량시간,공차시간,감율,감량,인수량,단가,금액,비고';
