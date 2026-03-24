@@ -46,7 +46,7 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
 .badge-sell{background:#fce4ec;color:var(--red)}
 .rec-car{font-size:12px;color:#bbb;margin-left:6px}
 .rec-date{font-size:11px;color:#bbb;flex-shrink:0}
-.rec-company{font-size:17px;font-weight:900;color:#111;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec-company{font-size:14px;font-weight:900;color:#111;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rec-middle{font-size:12px;color:#666;flex:1;text-align:center;white-space:nowrap}
 .rec-amount{font-size:17px;font-weight:700;color:var(--blue);flex:1;text-align:right;white-space:nowrap}
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(20,20,30,.9);color:white;padding:11px 22px;border-radius:24px;font-size:14px;z-index:9999;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap}
@@ -180,8 +180,8 @@ function onTareInput(){
   calcAll();
 }
 function calcAll(){
-  var g=pn(document.getElementById('fGross').value);
-  var t=pn(document.getElementById('fTare').value);
+  var g=pn(document.getElementById('fGross').value.replace(/,/g,''));
+  var t=pn(document.getElementById('fTare').value.replace(/,/g,''));
   var l=pn(document.getElementById('fLoss').value);
   var real=Math.max(g-t-l,0);
   var p=pn(document.getElementById('fPrice').value);
@@ -245,7 +245,7 @@ async function saveRecord(){
   var body={
     date:document.getElementById('fDate').value,type:document.getElementById('fType').value,
     car:car,company:comp,item:document.getElementById('fItem').value.trim(),
-    gross:pn(document.getElementById('fGross').value),tare:pn(document.getElementById('fTare').value),
+    gross:pn(document.getElementById('fGross').value.replace(/,/g,'')),tare:pn(document.getElementById('fTare').value.replace(/,/g,'')),
     grossTime:document.getElementById('fGrossTime').value||hhmm(now),
     tareTime:document.getElementById('fTareTime').value||hhmm(now),
     lossRate:pn(document.getElementById('fLossRate').value),loss:pn(document.getElementById('fLoss').value),
