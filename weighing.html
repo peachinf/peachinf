@@ -109,14 +109,14 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
 <div class="page" id="page1">
   <div class="search-box">
     <div class="row" style="margin-bottom:8px;align-items:center;">
-      <select id="sType" style="flex:0 0 65px;padding:9px 4px;">
+      <select id="sType" style="flex:0 0 65px;padding:9px 4px;text-align:center;text-align-last:center;font-size:13px;">
         <option value="전체">전체</option>
         <option value="매입" selected>매입</option>
         <option value="매출">매출</option>
       </select>
-      <input type="date" id="sFrom" style="flex:1;min-width:0;">
-      <span style="flex-shrink:0;">~</span>
-      <input type="date" id="sTo" style="flex:1;min-width:0;">
+      <input type="date" id="sFrom" style="flex:1;min-width:0;font-size:11px;padding:9px 2px;letter-spacing:-0.5px;">
+      <span style="flex-shrink:0;padding:0 2px;">~</span>
+      <input type="date" id="sTo" style="flex:1;min-width:0;font-size:11px;padding:9px 2px;letter-spacing:-0.5px;">
     </div>
     <div class="row" style="align-items:center;">
       <input type="text" id="sKw" placeholder="차량·거래처 검색" style="flex:1" oninput="renderList()">
