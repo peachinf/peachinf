@@ -108,20 +108,20 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
 
 <div class="page" id="page1">
   <div class="search-box">
-    <div class="row" style="margin-bottom:8px;">
-      <input type="date" id="sFrom" style="flex:1">
-      <span>~</span>
-      <input type="date" id="sTo" style="flex:1">
-    </div>
-    <div class="row" style="margin-bottom:8px;">
+    <div class="row" style="margin-bottom:8px;align-items:center;">
       <select id="sType" style="flex:0 0 70px">
         <option value="전체">전체</option>
         <option value="매입" selected>매입</option>
         <option value="매출">매출</option>
       </select>
-      <input type="text" id="sKw" placeholder="차량·거래처 검색" style="flex:1" oninput="renderList()">
+      <input type="date" id="sFrom" style="flex:1">
+      <span>~</span>
+      <input type="date" id="sTo" style="flex:1">
     </div>
-    <button class="btn btn-blue" style="padding:10px" onclick="loadRecords()">새로고침</button>
+    <div class="row" style="align-items:center;">
+      <input type="text" id="sKw" placeholder="차량·거래처 검색" style="flex:1" oninput="renderList()">
+      <button class="btn btn-blue" style="flex:0 0 80px;padding:10px;margin:0;" onclick="loadRecords()">새로고침</button>
+    </div>
   </div>
   <div id="sumBar" class="sum-bar"></div>
   <div id="recList"></div>
