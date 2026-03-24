@@ -561,4 +561,54 @@ app.get('/weighing', (req, res) => {
   res.sendFile(__dirname + '/weighing.html');
 });
 
+// ─── 계량기록 수정 ──────────────────────────────────
+app.post('/weighing/update', async (req, res) => {
+  try {
+    const b = req.body;
+    const text = await readFile(FILE_IDS.records_csv);
+    const records = parseWeighingCSV(text);
+
+    // id에서 index 추출 (형식: idx_date_car)
+    const idx = parseInt(String(b.id).split('_')[0]);
+    if (isNaN(idx) || idx < 0 || idx >= records.length) {
+      return res.status(404).json({ ok: false, error: '기록을 찾을 수 없음' });
+    }
+
+    records[idx] = {
+      ...records[idx],
+      date:      b.date      || records[idx].date,
+      type:      b.type      || records[idx].type,
+      car:       b.car       || records[idx].car,
+      company:   b.company   || records[idx].company,
+      item:      b.item      || records[idx].item,
+      gross:     b.gross     !== undefined ? b.gross     : records[idx].gross,
+      tare:      b.tare      !== undefined ? b.tare      : records[idx].tare,
+      grossTime: b.grossTime || records[idx].grossTime,
+      tareTime:  b.tareTime  || records[idx].tareTime,
+      lossRate:  b.lossRate  !== undefined ? b.lossRate  : records[idx].lossRate,
+      loss:      b.loss      !== undefined ? b.loss      : records[idx].loss,
+      real:      b.real      !== undefined ? b.real      : records[idx].real,
+      price:     b.price     !== undefined ? b.price     : records[idx].price,
+      amount:    b.amount    !== undefined ? b.amount    : records[idx].amount,
+      memo:      b.memo      !== undefined ? b.memo      : records[idx].memo,
+    };
+
+    const { Readable } = require('stream');
+    const CSV_H = '날짜,구분,차량,거래처,품목,총중량,공차,총중량시간,공차시간,감율,감량,인수량,단가,금액,비고';
+    const rows = records.map(r =>
+      [r.date,r.type,r.car,r.company,r.item,r.gross,r.tare,
+       r.grossTime,r.tareTime,r.lossRate,r.loss,r.real,r.price,r.amount,r.memo].join(',')
+    );
+    const newText = CSV_H + String.fromCharCode(10) + rows.join(String.fromCharCode(10));
+    const stream = Readable.from([newText]);
+    await drive.files.update({
+      fileId: FILE_IDS.records_csv,
+      media: { mimeType: 'text/csv', body: stream }
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.toString() });
+  }
+});
+
 app.listen(process.env.PORT || 8080);
