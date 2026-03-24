@@ -191,7 +191,15 @@ function resetForm(){
   document.getElementById('fAmount').value='';
 }
 
+var _lastKw='';
 async function loadRecords(){
+  var curKw=document.getElementById('sKw').value;
+  if(curKw && curKw===_lastKw){
+    document.getElementById('sKw').value='';
+    _lastKw='';
+  } else {
+    _lastKw=curKw;
+  }
   document.getElementById('recList').innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
   document.getElementById('syncStatus').textContent='동기화 중...';
   try{
