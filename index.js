@@ -87,17 +87,6 @@ function parseWeighingCSV(text) {
   });
 }
 
-async function writeWeighingCSV(records) {
-  const { Readable } = require('stream');
-  const rows = records.map(r =>
-    [r.date,r.type,r.car,r.company,r.item,r.gross,r.tare,
-     r.grossTime,r.tareTime,r.lossRate,r.loss,r.real,r.price,r.amount,r.memo].join(',')
-  );
-  const newText = CSV_HEADER + String.fromCharCode(10) + rows.join(String.fromCharCode(10));
-  const stream = Readable.from([newText]);
-  await drive.files.update({ fileId: FILE_IDS.records_csv, media: { mimeType: 'text/csv', body: stream } });
-}
-
 async function appendWeighingCSV(b) {
   const { Readable } = require('stream');
   const text = await readFile(FILE_IDS.records_csv);
@@ -110,7 +99,18 @@ async function appendWeighingCSV(b) {
     b.lossRate||0, b.loss||0, b.real||0,
     b.price||0, b.amount||0, b.memo||''
   ].join(',');
-  const newText = clean.trimEnd() + String.fromCharCode(10) + row;
+  const newText = clean.trimEnd() + '\n' + row;
+  const stream = Readable.from([newText]);
+  await drive.files.update({ fileId: FILE_IDS.records_csv, media: { mimeType: 'text/csv', body: stream } });
+}
+
+async function writeWeighingCSV(records) {
+  const { Readable } = require('stream');
+  const rows = records.map(r =>
+    [r.date,r.type,r.car,r.company,r.item,r.gross,r.tare,
+     r.grossTime,r.tareTime,r.lossRate,r.loss,r.real,r.price,r.amount,r.memo].join(',')
+  );
+  const newText = CSV_HEADER + '\n' + rows.join('\n');
   const stream = Readable.from([newText]);
   await drive.files.update({ fileId: FILE_IDS.records_csv, media: { mimeType: 'text/csv', body: stream } });
 }
@@ -123,15 +123,22 @@ app.post('/records', async (req, res) => {
   try { await writeFile(FILE_IDS.records, req.body); res.json({ ok: true }); } catch (e) { res.status(500).json({ ok: false, error: e.toString() }); }
 });
 
-app.get('/records/json', async (req, res) => {
-  try { res.json({ records: parseWeighingCSV(await readFile(FILE_IDS.records_csv)) }); } catch (e) { res.status(500).send(e.toString()); }
+app.post('/weighing/delete', async (req, res) => {
+  try {
+    const { date, car, gross, grossTime } = req.body;
+    const records = parseWeighingCSV(await readFile(FILE_IDS.records_csv));
+    const filtered = records.filter(r =>
+      !(r.date === date && r.car === car && String(r.gross) === String(gross) && r.grossTime === grossTime)
+    );
+    await writeWeighingCSV(filtered);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ ok: false, error: e.toString() }); }
 });
 
 app.post('/weighing/save', async (req, res) => {
   try { await appendWeighingCSV(req.body); res.json({ ok: true }); } catch (e) { res.status(500).json({ ok: false, error: e.toString() }); }
 });
 
-// ─── 계량기록 수정 ────────────────────────────────────
 app.post('/weighing/update', async (req, res) => {
   try {
     const b = req.body;
@@ -142,41 +149,19 @@ app.post('/weighing/update', async (req, res) => {
     }
     records[idx] = {
       id: records[idx].id,
-      date:      b.date      || records[idx].date,
-      type:      b.type      || records[idx].type,
-      car:       b.car       || records[idx].car,
-      company:   b.company   || records[idx].company,
-      item:      b.item      !== undefined ? b.item      : records[idx].item,
-      gross:     b.gross     !== undefined ? b.gross     : records[idx].gross,
-      tare:      b.tare      !== undefined ? b.tare      : records[idx].tare,
-      grossTime: b.grossTime || records[idx].grossTime,
-      tareTime:  b.tareTime  || records[idx].tareTime,
-      lossRate:  b.lossRate  !== undefined ? b.lossRate  : records[idx].lossRate,
-      loss:      b.loss      !== undefined ? b.loss      : records[idx].loss,
-      real:      b.real      !== undefined ? b.real      : records[idx].real,
-      price:     b.price     !== undefined ? b.price     : records[idx].price,
-      amount:    b.amount    !== undefined ? b.amount    : records[idx].amount,
-      memo:      b.memo      !== undefined ? b.memo      : records[idx].memo,
+      date: b.date, type: b.type, car: b.car, company: b.company,
+      item: b.item, gross: b.gross, tare: b.tare,
+      grossTime: b.grossTime, tareTime: b.tareTime,
+      lossRate: b.lossRate, loss: b.loss, real: b.real,
+      price: b.price, amount: b.amount, memo: b.memo,
     };
     await writeWeighingCSV(records);
     res.json({ ok: true });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.toString() });
-  }
+  } catch (e) { res.status(500).json({ ok: false, error: e.toString() }); }
 });
 
-app.post('/weighing/delete', async (req, res) => {
-  try {
-    const { date, car, gross, grossTime } = req.body;
-    const records = parseWeighingCSV(await readFile(FILE_IDS.records_csv));
-    const filtered = records.filter(r =>
-      !(r.date === date && r.car === car && String(r.gross) === String(gross) && r.grossTime === grossTime)
-    );
-    await writeWeighingCSV(filtered);
-    res.json({ ok: true });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.toString() });
-  }
+app.get('/records/json', async (req, res) => {
+  try { res.json({ records: parseWeighingCSV(await readFile(FILE_IDS.records_csv)) }); } catch (e) { res.status(500).send(e.toString()); }
 });
 
 app.get('/requests', async (req, res) => {
@@ -384,8 +369,7 @@ app.post('/inquiries/add', async (req, res) => {
     const data = JSON.parse(await readFile(INQUIRY_FILE_ID));
     data.inquiries.push({
       id: req.body.id || Date.now().toString(),
-      category: req.body.category,
-      content: req.body.content,
+      category: req.body.category, content: req.body.content,
       answer: null, status: 'PENDING',
       createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
     });
