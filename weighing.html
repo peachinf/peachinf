@@ -312,6 +312,7 @@ function loadToForm(id){
   var r=records.find(function(x){return String(x.id)===String(id);});
   if(!r)return;
   _editId=r.id||null;
+  document.getElementById('fType').value=r.type||'매입';
   document.getElementById('fDate').value=r.date||'';
   document.getElementById('fCar').value=r.car||'';
   document.getElementById('fCompany').value=r.company||'';
@@ -324,7 +325,9 @@ function loadToForm(id){
   document.getElementById('fLoss').value=r.loss||'';
   document.getElementById('fPrice').value=r.price||'';
   document.getElementById('fMemo').value=r.memo||'';
-  calcAll();switchTab(0);window.scrollTo(0,0);toast('기록 불러옴');
+  calcAll();switchTab(0);window.scrollTo(0,0);
+  _editId=r.id||null;
+  toast('기록 불러옴');
 }
 
 function mkCanvas(w,h){var cv=document.createElement('canvas');cv.width=w;cv.height=h;return cv;}
