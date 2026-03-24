@@ -136,6 +136,7 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
 <script>
 var SERVER='https://peachinf-16192067572.europe-west1.run.app';
 var records=[];
+var _editId=null;
 
 window.onload=function(){
   var today=todayStr(),now=new Date();
@@ -204,7 +205,8 @@ function onLossInput(){
 }
 function resetForm(){
   var now=new Date();
-  document.getElementById('fDate').value=todayStr();
+  _editId=null;
+  document.getElementById('fType').value='매입';
   document.getElementById('fGrossTime').value=hhmm(now);
   document.getElementById('fTareTime').value='';
   ['fCar','fCompany','fItem','fMemo'].forEach(function(id){document.getElementById(id).value='';});
@@ -255,10 +257,14 @@ async function saveRecord(){
     memo:document.getElementById('fMemo').value.trim(),
   };
   try{
-    var res=await fetch(SERVER+'/weighing/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var url=_editId ? SERVER+'/weighing/update' : SERVER+'/weighing/save';
+    if(_editId) body.id=_editId;
+    var res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     var json=await res.json();
     if(!json.ok)throw new Error('저장 실패');
-    toast('저장 완료!');resetForm();await loadRecords();
+    toast(_editId?'수정 완료!':'저장 완료!');
+    _editId=null;
+    resetForm();await loadRecords();
   }catch(e){toast('저장 실패: '+e.message);}
 }
 
@@ -305,7 +311,7 @@ function renderList(){
 function loadToForm(id){
   var r=records.find(function(x){return String(x.id)===String(id);});
   if(!r)return;
-  document.getElementById('fType').value=r.type||'매입';
+  _editId=r.id||null;
   document.getElementById('fDate').value=r.date||'';
   document.getElementById('fCar').value=r.car||'';
   document.getElementById('fCompany').value=r.company||'';
