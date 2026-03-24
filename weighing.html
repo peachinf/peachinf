@@ -73,6 +73,12 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
   <div class="card" style="margin-top:6px;padding:10px;">
     <table style="width:100%;border-collapse:collapse;">
       <colgroup><col style="width:76px"><col style="width:90px"><col></colgroup>
+      <tr><td class="fl">구분</td><td colspan="2" style="padding:3px 0;">
+        <select id="fType" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;">
+          <option value="매입" selected>매입</option>
+          <option value="매출">매출</option>
+        </select>
+      </td></tr>
       <tr><td class="fl">계량일자</td><td colspan="2" style="padding:3px 0;"><input type="date" id="fDate" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;"></td></tr>
       <tr><td class="fl">차량번호</td><td colspan="2" style="padding:3px 0;"><input type="text" id="fCar" autocomplete="off" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;"></td></tr>
       <tr><td class="fl">거래처</td><td colspan="2" style="padding:3px 0;"><input type="text" id="fCompany" autocomplete="off" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;"></td></tr>
@@ -80,12 +86,12 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
       <tr>
         <td class="fl">총중량</td>
         <td style="padding:3px 4px 3px 0;"><input type="time" id="fGrossTime" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;"></td>
-        <td style="padding:3px 0;"><input type="number" id="fGross" inputmode="numeric" placeholder="0" oninput="onGrossInput()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;"></td>
+        <td style="padding:3px 0;"><input type="text" id="fGross" inputmode="numeric" placeholder="0" oninput="onGrossInput()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;"></td>
       </tr>
       <tr>
         <td class="fl">공차중량</td>
         <td style="padding:3px 4px 3px 0;"><input type="time" id="fTareTime" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;"></td>
-        <td style="padding:3px 0;"><input type="number" id="fTare" inputmode="numeric" placeholder="0" oninput="onTareInput()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;"></td>
+        <td style="padding:3px 0;"><input type="text" id="fTare" inputmode="numeric" placeholder="0" oninput="onTareInput()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;"></td>
       </tr>
       <tr>
         <td class="fl">감량</td>
@@ -155,8 +161,24 @@ function switchTab(i){
 }
 
 var _sync=false;
-function onGrossInput(){var now=new Date();var gt=document.getElementById('fGrossTime');if(!gt.value)gt.value=hhmm(now);calcAll();}
-function onTareInput(){var now=new Date();var tt=document.getElementById('fTareTime');if(!tt.value)tt.value=hhmm(now);calcAll();}
+function onGrossInput(){
+  var el=document.getElementById('fGross');
+  var raw=el.value.replace(/,/g,'');
+  if(raw&&!isNaN(raw)) el.value=Number(raw).toLocaleString('ko-KR');
+  var now=new Date();
+  var gt=document.getElementById('fGrossTime');
+  if(!gt.value) gt.value=hhmm(now);
+  calcAll();
+}
+function onTareInput(){
+  var el=document.getElementById('fTare');
+  var raw=el.value.replace(/,/g,'');
+  if(raw&&!isNaN(raw)) el.value=Number(raw).toLocaleString('ko-KR');
+  var now=new Date();
+  var tt=document.getElementById('fTareTime');
+  if(!tt.value) tt.value=hhmm(now);
+  calcAll();
+}
 function calcAll(){
   var g=pn(document.getElementById('fGross').value);
   var t=pn(document.getElementById('fTare').value);
@@ -221,7 +243,7 @@ async function saveRecord(){
   if(!car||!comp){toast('차량번호와 거래처를 입력하세요');return;}
   var now=new Date();
   var body={
-    date:document.getElementById('fDate').value,type:'매입',
+    date:document.getElementById('fDate').value,type:document.getElementById('fType').value,
     car:car,company:comp,item:document.getElementById('fItem').value.trim(),
     gross:pn(document.getElementById('fGross').value),tare:pn(document.getElementById('fTare').value),
     grossTime:document.getElementById('fGrossTime').value||hhmm(now),
@@ -283,6 +305,7 @@ function renderList(){
 function loadToForm(id){
   var r=records.find(function(x){return String(x.id)===String(id);});
   if(!r)return;
+  document.getElementById('fType').value=r.type||'매입';
   document.getElementById('fDate').value=r.date||'';
   document.getElementById('fCar').value=r.car||'';
   document.getElementById('fCompany').value=r.company||'';
