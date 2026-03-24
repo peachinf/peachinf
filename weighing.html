@@ -310,8 +310,8 @@ function loadToForm(id){
   document.getElementById('fCar').value=r.car||'';
   document.getElementById('fCompany').value=r.company||'';
   document.getElementById('fItem').value=r.item||'';
-  document.getElementById('fGross').value=r.gross||'';
-  document.getElementById('fTare').value=r.tare||'';
+  document.getElementById('fGross').value=r.gross?fmt(r.gross):'';
+  document.getElementById('fTare').value=r.tare?fmt(r.tare):'';
   document.getElementById('fGrossTime').value=r.grossTime||'';
   document.getElementById('fTareTime').value=r.tareTime||'';
   document.getElementById('fLossRate').value=r.lossRate||0;
