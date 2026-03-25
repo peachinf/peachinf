@@ -51,9 +51,9 @@ async function readFile(fileId) {
     { responseType: 'stream' }
   );
   return new Promise((resolve, reject) => {
-    let data = '';
-    r.data.on('data', d => data += d);
-    r.data.on('end', () => resolve(data));
+    const chunks = [];
+    r.data.on('data', d => chunks.push(Buffer.isBuffer(d) ? d : Buffer.from(d)));
+    r.data.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     r.data.on('error', reject);
   });
 }
