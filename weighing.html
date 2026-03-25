@@ -362,7 +362,7 @@ var price=pn(document.getElementById('fPrice').value);
 var amount=pn(document.getElementById('fAmount').value.replace(/,/g,''));
 var memo=document.getElementById('fMemo').value.trim();
 
-var W=800, LW=220, TW=130, ROW=76;
+var W=900, LW=240, TW=140, ROW=90;
 var ROWS=[
 {lbl:'일     자',  val:date,       center:true,  hasTime:false},
 {lbl:'차량번호',   val:car,        center:true,  hasTime:false},
@@ -377,7 +377,7 @@ var ROWS=[
 {lbl:'비     고',  val:memo||'',   center:false, hasTime:false},
 ];
 
-var HDR=120, SUB=38, TY=HDR+SUB;
+var HDR=140, SUB=42, TY=HDR+SUB;
 var TABLE_H=ROWS.length*ROW;
 var FTR=200;
 var H=TY+TABLE_H+FTR;
@@ -387,8 +387,8 @@ cx.fillStyle='#fff'; cx.fillRect(0,0,W,H);
 
 // ── 헤더 영역 (흰배경 + 파란 박스 타이틀)
 cx.fillStyle='#5a7ab5'; cx.fillRect(30,20,W-60,HDR-20);
-cx.fillStyle='#fff'; cx.font='bold 52px sans-serif'; cx.textAlign='center';
-cx.fillText('계  량  증  명  서', W/2, 88);
+cx.fillStyle='#fff'; cx.font='bold 62px sans-serif'; cx.textAlign='center';
+cx.fillText('계  량  증  명  서', W/2, 100);
 
 // ── 공급자 보관용
 cx.fillStyle='#f2f5fb'; cx.fillRect(0,HDR,W,SUB);
@@ -421,20 +421,20 @@ ROWS.forEach(function(r,i){
   // 시간 칸
   if(r.hasTime){
     cx.beginPath(); cx.moveTo(LW+TW,y); cx.lineTo(LW+TW,y+ROW); cx.stroke();
-    cx.fillStyle='#222'; cx.font='26px sans-serif'; cx.textAlign='center';
-    cx.fillText(r.time||'', LW+TW/2, y+ROW/2+10);
+    cx.fillStyle='#222'; cx.font='30px sans-serif'; cx.textAlign='center';
+    cx.fillText(r.time||'', LW+TW/2, y+ROW/2+11);
   }
 
   // 라벨
-  cx.fillStyle='#1a2e5a'; cx.font='bold 28px sans-serif'; cx.textAlign='center';
-  cx.fillText(r.lbl, LW/2, y+ROW/2+10);
+  cx.fillStyle='#1a2e5a'; cx.font='bold 32px sans-serif'; cx.textAlign='center';
+  cx.fillText(r.lbl, LW/2, y+ROW/2+11);
 
   // 값
   var vx=r.hasTime?LW+TW:LW, vw=W-vx;
   cx.fillStyle=r.isAmt?'#c0392b':'#111';
-  cx.font=r.isAmt?'bold 36px sans-serif':'28px sans-serif';
-  if(r.center){cx.textAlign='center'; cx.fillText(r.val, vx+vw/2, y+ROW/2+10);}
-  else{cx.textAlign='right'; cx.fillText(r.val, W-24, y+ROW/2+10);}
+  cx.font=r.isAmt?'bold 42px sans-serif':'32px sans-serif';
+  if(r.center){cx.textAlign='center'; cx.fillText(r.val, vx+vw/2, y+ROW/2+11);}
+  else{cx.textAlign='right'; cx.fillText(r.val, W-24, y+ROW/2+11);}
 });
 
 // ── 하단
