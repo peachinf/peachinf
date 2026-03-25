@@ -348,116 +348,143 @@ calcAll();switchTab(0);window.scrollTo(0,0);toast('기록 불러옴');
 function mkCanvas(w,h){var cv=document.createElement('canvas');cv.width=w;cv.height=h;return cv;}
 
 function genCertImg(){
-var date=document.getElementById('fDate').value;
-var car=document.getElementById('fCar').value.trim()||'-';
-var company=document.getElementById('fCompany').value.trim()||'-';
-var item=document.getElementById('fItem').value.trim()||'-';
-var gross=pn(document.getElementById('fGross').value);
-var grossTime=document.getElementById('fGrossTime').value;
-var tare=pn(document.getElementById('fTare').value);
-var tareTime=document.getElementById('fTareTime').value;
-var loss=pn(document.getElementById('fLoss').value);
-var real=pn(document.getElementById('fReal').value.replace(/,/g,''));
-var price=pn(document.getElementById('fPrice').value);
-var amount=pn(document.getElementById('fAmount').value.replace(/,/g,''));
-var memo=document.getElementById('fMemo').value.trim();
+  var date=document.getElementById('fDate').value;
+  var car=document.getElementById('fCar').value.trim()||'-';
+  var company=document.getElementById('fCompany').value.trim()||'-';
+  var item=document.getElementById('fItem').value.trim()||'-';
+  var gross=pn(document.getElementById('fGross').value);
+  var grossTime=document.getElementById('fGrossTime').value;
+  var tare=pn(document.getElementById('fTare').value);
+  var tareTime=document.getElementById('fTareTime').value;
+  var loss=pn(document.getElementById('fLoss').value);
+  var real=pn(document.getElementById('fReal').value.replace(/,/g,''));
+  var price=pn(document.getElementById('fPrice').value);
+  var amount=pn(document.getElementById('fAmount').value.replace(/,/g,''));
+  var memo=document.getElementById('fMemo').value.trim();
 
-var W=900, LW=240, TW=140, ROW=90;
-var ROWS=[
-{lbl:'일     자',  val:date,       center:true,  hasTime:false},
-{lbl:'차량번호',   val:car,        center:true,  hasTime:false},
-{lbl:'거 래 처',  val:company,    center:true,  hasTime:false},
-{lbl:'품     명',  val:item,       center:true,  hasTime:false},
-{lbl:'총 중 량',  val:fmt(gross), center:false, hasTime:true, time:grossTime},
-{lbl:'공     차',  val:fmt(tare),  center:false, hasTime:true, time:tareTime},
-{lbl:'감     량',  val:fmt(loss),  center:false, hasTime:false},
-{lbl:'인 수 량',  val:fmt(real),  center:false, hasTime:false},
-{lbl:'단     가',  val:fmt(price), center:false, hasTime:false},
-{lbl:'금     액',  val:fmt(amount),center:false, hasTime:false, isAmt:true},
-{lbl:'비     고',  val:memo||'',   center:false, hasTime:false},
-];
+  // ── 크기 설정
+  var W   = 1000;   // 캔버스 전체 너비
+  var LW  = 280;    // 라벨 열 너비
+  var TW  = 170;    // 시간 열 너비
+  var ROW = 120;    // 행 높이
+  var PAD = 55;     // 숫자 오른쪽 여백 (클수록 왼쪽으로)
 
-var HDR=140, SUB=42, TY=HDR+SUB;
-var TABLE_H=ROWS.length*ROW;
-var FTR=200;
-var H=TY+TABLE_H+FTR;
+  var ROWS=[
+    {lbl:'일     자',  val:date,        center:true,  hasTime:false},
+    {lbl:'차량번호',   val:car,         center:true,  hasTime:false},
+    {lbl:'거 래 처',  val:company,     center:true,  hasTime:false},
+    {lbl:'품     명',  val:item,        center:true,  hasTime:false},
+    {lbl:'총 중 량',  val:fmt(gross),  center:false, hasTime:true, time:grossTime},
+    {lbl:'공     차',  val:fmt(tare),   center:false, hasTime:true, time:tareTime},
+    {lbl:'감     량',  val:fmt(loss),   center:false, hasTime:false},
+    {lbl:'인 수 량',  val:fmt(real),   center:false, hasTime:false},
+    {lbl:'단     가',  val:fmt(price),  center:false, hasTime:false},
+    {lbl:'금     액',  val:fmt(amount), center:false, hasTime:false, isAmt:true},
+    {lbl:'비     고',  val:memo||'',    center:false, hasTime:false},
+  ];
 
-var cv=mkCanvas(W,H), cx=cv.getContext('2d');
-cx.fillStyle='#fff'; cx.fillRect(0,0,W,H);
+  var HDR=160, SUB=46, TY=HDR+SUB;
+  var TABLE_H=ROWS.length*ROW;
+  var FTR=250;
+  var H=TY+TABLE_H+FTR;
 
-// ── 헤더 영역 (흰배경 + 파란 박스 타이틀)
-cx.fillStyle='#5a7ab5'; cx.fillRect(30,20,W-60,HDR-20);
-cx.fillStyle='#fff'; cx.font='bold 62px sans-serif'; cx.textAlign='center';
-cx.fillText('계  량  증  명  서', W/2, 100);
+  var cv=mkCanvas(W,H), cx=cv.getContext('2d');
+  cx.fillStyle='#fff'; cx.fillRect(0,0,W,H);
 
-// ── 공급자 보관용
-cx.fillStyle='#f2f5fb'; cx.fillRect(0,HDR,W,SUB);
-cx.strokeStyle='#c0cce0'; cx.lineWidth=1;
-cx.beginPath(); cx.moveTo(0,HDR); cx.lineTo(W,HDR); cx.stroke();
-cx.beginPath(); cx.moveTo(0,HDR+SUB); cx.lineTo(W,HDR+SUB); cx.stroke();
-cx.fillStyle='#666'; cx.font='16px sans-serif'; cx.textAlign='right';
-cx.fillText('(공급자 보관용)', W-20, HDR+SUB/2+6);
+  // ── 헤더
+  cx.fillStyle='#5a7ab5'; cx.fillRect(0,0,W,HDR);
+  cx.fillStyle='#fff';
+  cx.font='bold 78px sans-serif';
+  cx.textAlign='center';
+  cx.fillText('계  량  증  명  서', W/2, 115);
 
-// ── 표 외곽 테두리
-cx.strokeStyle='#8090b0'; cx.lineWidth=2;
-cx.strokeRect(0, TY, W, TABLE_H);
+  // ── 공급자 보관용
+  cx.fillStyle='#f2f5fb'; cx.fillRect(0,HDR,W,SUB);
+  cx.strokeStyle='#c0cce0'; cx.lineWidth=1;
+  cx.beginPath(); cx.moveTo(0,HDR); cx.lineTo(W,HDR); cx.stroke();
+  cx.beginPath(); cx.moveTo(0,HDR+SUB); cx.lineTo(W,HDR+SUB); cx.stroke();
+  cx.fillStyle='#888'; cx.font='20px sans-serif'; cx.textAlign='right';
+  cx.fillText('(공급자 보관용)', W-20, HDR+SUB/2+8);
 
-// ── 각 행
-ROWS.forEach(function(r,i){
-  var y=TY+i*ROW;
+  // ── 표 외곽
+  cx.strokeStyle='#8090b0'; cx.lineWidth=2;
+  cx.strokeRect(0,TY,W,TABLE_H);
 
-  // 라벨 배경
-  cx.fillStyle='#dce5f5'; cx.fillRect(0,y,LW,ROW);
-  // 값 배경
-  cx.fillStyle='#fff'; cx.fillRect(LW,y,W-LW,ROW);
+  // ── 행 그리기
+  ROWS.forEach(function(r,i){
+    var y=TY+i*ROW;
+    var mid=y+ROW/2;
 
-  // 행 구분선
+    // 배경
+    cx.fillStyle='#dce5f5'; cx.fillRect(0,y,LW,ROW);
+    cx.fillStyle='#fff';    cx.fillRect(LW,y,W-LW,ROW);
+
+    // 행 구분선
+    cx.strokeStyle='#b0bfd8'; cx.lineWidth=1;
+    cx.beginPath(); cx.moveTo(0,y+ROW); cx.lineTo(W,y+ROW); cx.stroke();
+
+    // 라벨/값 세로선
+    cx.beginPath(); cx.moveTo(LW,y); cx.lineTo(LW,y+ROW); cx.stroke();
+
+    // 시간 칸
+    if(r.hasTime){
+      cx.beginPath(); cx.moveTo(LW+TW,y); cx.lineTo(LW+TW,y+ROW); cx.stroke();
+      cx.fillStyle='#333'; cx.font='40px sans-serif'; cx.textAlign='center';
+      cx.fillText(r.time||'', LW+TW/2, mid+15);
+    }
+
+    // 라벨
+    cx.fillStyle='#1a2e5a'; cx.font='bold 44px sans-serif'; cx.textAlign='center';
+    cx.fillText(r.lbl, LW/2, mid+16);
+
+    // 값 영역
+    var vx = r.hasTime ? (LW+TW) : LW;
+    var vw = W - vx;
+
+    cx.fillStyle = r.isAmt ? '#c0392b' : '#111';
+
+    if(r.center){
+      cx.font = '48px sans-serif';
+      cx.textAlign='center';
+      cx.fillText(r.val, vx+vw/2, mid+17);
+    } else {
+      cx.font = r.isAmt ? 'bold 66px sans-serif' : '50px sans-serif';
+      cx.textAlign='right';
+      cx.fillText(r.val, W-PAD, mid+18);
+    }
+  });
+
+  // ── 하단 푸터
+  var BY=TY+TABLE_H;
+  cx.fillStyle='#f2f5fb'; cx.fillRect(0,BY,W,FTR);
+  cx.strokeStyle='#8090b0'; cx.lineWidth=2;
+  cx.beginPath(); cx.moveTo(0,BY); cx.lineTo(W,BY); cx.stroke();
+  cx.strokeRect(0,BY,W,FTR);
+
+  // 회사명
+  cx.fillStyle='#1a2e5a'; cx.font='bold 46px sans-serif'; cx.textAlign='center';
+  cx.fillText('대성자원(재달)', W/2, BY+68);
+
+  // 구분선
   cx.strokeStyle='#b0bfd8'; cx.lineWidth=1;
-  cx.beginPath(); cx.moveTo(0,y+ROW); cx.lineTo(W,y+ROW); cx.stroke();
+  cx.beginPath(); cx.moveTo(60,BY+86); cx.lineTo(W-60,BY+86); cx.stroke();
 
-  // 라벨/값 세로선
-  cx.beginPath(); cx.moveTo(LW,y); cx.lineTo(LW,y+ROW); cx.stroke();
+  // 주소·연락처 - 좌우 열 정렬
+  var col1=W/2-14, col2=W/2+14;
+  cx.font='27px sans-serif';
+  cx.fillStyle='#333';
+  cx.textAlign='right'; cx.fillText('주소 :', col1, BY+130);
+  cx.textAlign='left';  cx.fillText('전남 순천시 주암면 광천리 215', col2, BY+130);
+  cx.textAlign='right'; cx.fillText('HP :', col1, BY+172);
+  cx.textAlign='left';  cx.fillText('010-5773-1520', col2, BY+172);
+  cx.textAlign='right'; cx.fillText('Fax :', col1, BY+210);
+  cx.textAlign='left';  cx.fillText('0504-428-1520', col2, BY+210);
 
-  // 시간 칸
-  if(r.hasTime){
-    cx.beginPath(); cx.moveTo(LW+TW,y); cx.lineTo(LW+TW,y+ROW); cx.stroke();
-    cx.fillStyle='#222'; cx.font='30px sans-serif'; cx.textAlign='center';
-    cx.fillText(r.time||'', LW+TW/2, y+ROW/2+11);
-  }
+  // 안내문
+  cx.fillStyle='#888'; cx.font='21px sans-serif'; cx.textAlign='center';
+  cx.fillText('필히 재확인 하십시오. ( 단위 : kg , 단가 : 원/kg )', W/2, BY+238);
 
-  // 라벨
-  cx.fillStyle='#1a2e5a'; cx.font='bold 32px sans-serif'; cx.textAlign='center';
-  cx.fillText(r.lbl, LW/2, y+ROW/2+11);
-
-  // 값
-  var vx=r.hasTime?LW+TW:LW, vw=W-vx;
-  cx.fillStyle=r.isAmt?'#c0392b':'#111';
-  cx.font=r.isAmt?'bold 42px sans-serif':'32px sans-serif';
-  if(r.center){cx.textAlign='center'; cx.fillText(r.val, vx+vw/2, y+ROW/2+11);}
-  else{cx.textAlign='right'; cx.fillText(r.val, W-24, y+ROW/2+11);}
-});
-
-// ── 하단
-var BY=TY+TABLE_H;
-cx.fillStyle='#f2f5fb'; cx.fillRect(0,BY,W,FTR);
-cx.strokeStyle='#8090b0'; cx.lineWidth=2;
-cx.beginPath(); cx.moveTo(0,BY); cx.lineTo(W,BY); cx.stroke();
-cx.strokeRect(0,BY,W,FTR);
-
-cx.fillStyle='#1a2e5a'; cx.font='bold 32px sans-serif'; cx.textAlign='center';
-cx.fillText('대성자원(재달)', W/2, BY+52);
-
-cx.strokeStyle='#b0bfd8'; cx.lineWidth=1;
-cx.beginPath(); cx.moveTo(60,BY+66); cx.lineTo(W-60,BY+66); cx.stroke();
-
-cx.fillStyle='#333'; cx.font='20px sans-serif'; cx.textAlign='center';
-cx.fillText('주소 : 전남 순천시 주암면 광천리 215', W/2, BY+98);
-cx.fillText('HP  : 010-5773-1520    Fax : 0504-428-1520', W/2, BY+128);
-cx.fillStyle='#666'; cx.font='18px sans-serif';
-cx.fillText('필히 재확인 하십시오. ( 단위 : kg , 단가 : 원/kg )', W/2, BY+158);
-cx.fillText('확인 후 중량의 변동에 대한 책임은 본 업소에는 없습니다.', W/2, BY+182);
-
-shareImg(cv,'계근표_'+car+'_'+date+'.jpg');
+  shareImg(cv,'계근표_'+car+'_'+date+'.jpg');
 }
 
 function genBuyImg(){
