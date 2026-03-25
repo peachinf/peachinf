@@ -469,20 +469,18 @@ function genCertImg(){
   cx.strokeStyle='#b0bfd8'; cx.lineWidth=1;
   cx.beginPath(); cx.moveTo(60,BY+86); cx.lineTo(W-60,BY+86); cx.stroke();
 
-  // 주소·연락처 - 좌우 열 정렬
-  var col1=W/2-14, col2=W/2+14;
-  cx.font='27px sans-serif';
-  cx.fillStyle='#333';
-  cx.textAlign='right'; cx.fillText('주소 :', col1, BY+130);
-  cx.textAlign='left';  cx.fillText('전남 순천시 주암면 광천리 215', col2, BY+130);
-  cx.textAlign='right'; cx.fillText('HP :', col1, BY+172);
-  cx.textAlign='left';  cx.fillText('010-5773-1520', col2, BY+172);
-  cx.textAlign='right'; cx.fillText('Fax :', col1, BY+210);
-  cx.textAlign='left';  cx.fillText('0504-428-1520', col2, BY+210);
-
-  // 안내문
-  cx.fillStyle='#888'; cx.font='21px sans-serif'; cx.textAlign='center';
-  cx.fillText('필히 재확인 하십시오. ( 단위 : kg , 단가 : 원/kg )', W/2, BY+238);
+  // 주소·연락처·안내문 - 콜론 기준 열 맞춤
+  var CX=W/2-10, VX=W/2+10;
+  cx.font='26px sans-serif'; cx.fillStyle='#333';
+  cx.textAlign='right'; cx.fillText('주소 :', CX, BY+128);
+  cx.textAlign='left';  cx.fillText('전남 순천시 주암면 광천리 215', VX, BY+128);
+  cx.textAlign='right'; cx.fillText('HP :', CX, BY+168);
+  cx.textAlign='left';  cx.fillText('010-5773-1520', VX, BY+168);
+  cx.textAlign='right'; cx.fillText('Fax :', CX, BY+206);
+  cx.textAlign='left';  cx.fillText('0504-428-1520', VX, BY+206);
+  cx.fillStyle='#888'; cx.font='21px sans-serif';
+  cx.textAlign='right'; cx.fillText('필히 :', CX, BY+238);
+  cx.textAlign='left';  cx.fillText('재확인 하십시오. ( 단위 : kg , 단가 : 원/kg )', VX, BY+238);
 
   shareImg(cv,'계근표_'+car+'_'+date+'.jpg');
 }
