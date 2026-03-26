@@ -91,6 +91,8 @@ function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
+function stripQuotes(s){ return s.replace(/^"|"$/g,''); }
+
 function parseWeighingCSV(text) {
   var clean = text;
   if (clean.charCodeAt(0) === 0xFEFF) clean = clean.slice(1);
@@ -109,13 +111,13 @@ function parseWeighingCSV(text) {
       return {
         id:        c[0].trim() || genId(),
         date:      c[1].trim(),  type:      c[2].trim(),
-        car:       c[3].trim(),  company:   c[4].trim(),
+        car:       stripQuotes(c[3].trim()),  company:   c[4].trim(),
         item:      c[5].trim(),  gross:     c[6].trim(),
         tare:      c[7].trim(),  grossTime: c[8].trim(),
         tareTime:  c[9].trim(),  lossRate:  c[10].trim(),
         loss:      c[11].trim(), real:      c[12].trim(),
         price:     c[13].trim(), amount:    c[14].trim(),
-        memo:      c[15].trim(),
+        memo:      stripQuotes(c[15].trim()),
       };
     } else {
       // 구버전 호환: id 없는 CSV → 자동 생성
@@ -123,13 +125,13 @@ function parseWeighingCSV(text) {
       return {
         id:        genId(),
         date:      c[0].trim(),  type:      c[1].trim(),
-        car:       c[2].trim(),  company:   c[3].trim(),
+        car:       stripQuotes(c[2].trim()),  company:   c[3].trim(),
         item:      c[4].trim(),  gross:     c[5].trim(),
         tare:      c[6].trim(),  grossTime: c[7].trim(),
         tareTime:  c[8].trim(),  lossRate:  c[9].trim(),
         loss:      c[10].trim(), real:      c[11].trim(),
         price:     c[12].trim(), amount:    c[13].trim(),
-        memo:      c[14].trim(),
+        memo:      stripQuotes(c[14].trim()),
       };
     }
   });
@@ -156,11 +158,11 @@ async function appendWeighingCSV(b) {
   var newId = b.id || genId();
   var row = [
     newId,
-    b.date||'', b.type||'매입', b.car||'', b.company||'',
+    b.date||'', b.type||'매입', '"'+(b.car||'')+'"', b.company||'',
     b.item||'', b.gross||0, b.tare||0,
     b.grossTime||'', b.tareTime||'',
     b.lossRate||0, b.loss||0, b.real||0,
-    b.price||0, b.amount||0, b.memo||''
+    b.price||0, b.amount||0, '"'+(b.memo||'')+'"'
   ].join(',');
 
   const newText = clean.trimEnd() + '\n' + row;
@@ -176,8 +178,8 @@ async function appendWeighingCSV(b) {
 async function writeWeighingCSV(records) {
   const { Readable } = require('stream');
   const rows = records.map(r =>
-    [r.id,r.date,r.type,r.car,r.company,r.item,r.gross,r.tare,
-     r.grossTime,r.tareTime,r.lossRate,r.loss,r.real,r.price,r.amount,r.memo].join(',')
+    [r.id,r.date,r.type,'"'+(r.car||'')+'"',r.company,r.item,r.gross,r.tare,
+     r.grossTime,r.tareTime,r.lossRate,r.loss,r.real,r.price,r.amount,'"'+(r.memo||'')+'"'].join(',')
   );
   const newText = CSV_HEADER + '\n' + rows.join('\n');
   const stream = Readable.from([newText]);
