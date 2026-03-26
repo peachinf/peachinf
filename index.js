@@ -217,14 +217,38 @@ app.post('/records', async (req, res) => {
 // ─── 계량기록 삭제 ──────────────────────────────────
 app.post('/weighing/delete', async (req, res) => {
   try {
-    const { id } = req.body;
-    const text = await readFile(FILE_IDS.records_csv);
+    const { id, date, car, gross, grossTime } = req.body;
+    let text = await readFile(FILE_IDS.records_csv);
+
+    // 구버전이면 마이그레이션 먼저
+    var firstLine = text.split(/\r?\n/)[0];
+    if (firstLine.trim().split(',')[0].trim() !== 'id') {
+      const migRecords = parseWeighingCSV(text);
+      await writeWeighingCSV(migRecords);
+      text = await readFile(FILE_IDS.records_csv);
+    }
+
     const records = parseWeighingCSV(text);
-    const filtered = records.filter(r => String(r.id) !== String(id));
-    if (filtered.length === records.length) {
+
+    // 1차: id 기준
+    let idx = records.findIndex(r => String(r.id) === String(id));
+
+    // 2차: fallback - 날짜+차량+총중량+시간
+    if (idx === -1) {
+      idx = records.findIndex(r =>
+        r.date === date &&
+        r.car  === car  &&
+        String(r.gross) === String(gross) &&
+        r.grossTime === grossTime
+      );
+    }
+
+    if (idx === -1) {
       return res.status(404).json({ ok: false, error: '기록을 찾을 수 없음' });
     }
-    await writeWeighingCSV(filtered);
+
+    records.splice(idx, 1);
+    await writeWeighingCSV(records);
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.toString() });
@@ -248,13 +272,25 @@ app.post('/weighing/update', async (req, res) => {
     const text = await readFile(FILE_IDS.records_csv);
     const records = parseWeighingCSV(text);
 
-    // id 기준으로 찾기 (구버전 index 방식 완전 제거)
-    const idx = records.findIndex(r => String(r.id) === String(b.id));
+    // 1차: id 기준
+    let idx = records.findIndex(r => String(r.id) === String(b.id));
+
+    // 2차: id 못 찾으면 날짜+차량+총중량시간으로 fallback
+    if (idx === -1) {
+      idx = records.findIndex(r =>
+        r.date === b.date &&
+        r.car  === b.car  &&
+        r.grossTime === b.grossTime &&
+        String(r.gross) === String(b.gross)
+      );
+    }
+
     if (idx === -1) {
       return res.status(404).json({ ok: false, error: '기록을 찾을 수 없음' });
     }
+
     records[idx] = {
-      id:       String(b.id),
+      id:       records[idx].id,   // 기존 id 유지
       date:     b.date,     type:     b.type,     car:      b.car,
       company:  b.company,  item:     b.item,      gross:    b.gross,
       tare:     b.tare,     grossTime:b.grossTime, tareTime: b.tareTime,
