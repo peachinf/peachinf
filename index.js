@@ -93,45 +93,55 @@ function genId() {
 
 function stripQuotes(s){ return s.replace(/^"|"$/g,''); }
 
+// 따옴표 안의 콤마 처리하는 CSV 파서
+function parseCSVLine(line) {
+  var result = [], cur = '', inQ = false;
+  for (var i = 0; i < line.length; i++) {
+    var ch = line[i];
+    if (ch === '"') { inQ = !inQ; }
+    else if (ch === ',' && !inQ) { result.push(cur); cur = ''; }
+    else { cur += ch; }
+  }
+  result.push(cur);
+  return result;
+}
+
 function parseWeighingCSV(text) {
   var clean = text;
   if (clean.charCodeAt(0) === 0xFEFF) clean = clean.slice(1);
   var lines = clean.trim().split(/\r?\n/).filter(function(l){ return l.trim(); });
   if (lines.length < 2) return [];
 
-  // 헤더에 id 컬럼이 있는지 확인 (구버전 CSV 호환)
   var header = lines[0].split(',');
   var hasId = header[0].trim() === 'id';
 
-  return lines.slice(1).map(function(line, idx) {
-    var c = line.split(',');
+  return lines.slice(1).map(function(line) {
+    var c = parseCSVLine(line);
     if (hasId) {
-      // 신버전: id,날짜,구분,...
       while (c.length < 16) c.push('');
       return {
-        id:        c[0].trim() || genId(),
+        id:        c[0].trim(),
         date:      c[1].trim(),  type:      c[2].trim(),
-        car:       stripQuotes(c[3].trim()),  company:   c[4].trim(),
+        car:       c[3].trim(),  company:   c[4].trim(),
         item:      c[5].trim(),  gross:     c[6].trim(),
         tare:      c[7].trim(),  grossTime: c[8].trim(),
         tareTime:  c[9].trim(),  lossRate:  c[10].trim(),
         loss:      c[11].trim(), real:      c[12].trim(),
         price:     c[13].trim(), amount:    c[14].trim(),
-        memo:      stripQuotes(c[15].trim()),
+        memo:      c[15].trim(),
       };
     } else {
-      // 구버전 호환: id 없는 CSV → 자동 생성
       while (c.length < 15) c.push('');
       return {
         id:        genId(),
         date:      c[0].trim(),  type:      c[1].trim(),
-        car:       stripQuotes(c[2].trim()),  company:   c[3].trim(),
+        car:       c[2].trim(),  company:   c[3].trim(),
         item:      c[4].trim(),  gross:     c[5].trim(),
         tare:      c[6].trim(),  grossTime: c[7].trim(),
         tareTime:  c[8].trim(),  lossRate:  c[9].trim(),
         loss:      c[10].trim(), real:      c[11].trim(),
         price:     c[12].trim(), amount:    c[13].trim(),
-        memo:      stripQuotes(c[14].trim()),
+        memo:      c[14].trim(),
       };
     }
   });
@@ -139,23 +149,18 @@ function parseWeighingCSV(text) {
 
 async function appendWeighingCSV(b) {
   const { Readable } = require('stream');
-  const text = await readFile(FILE_IDS.records_csv);
+  var text = await readFile(FILE_IDS.records_csv);
+  var firstLine = text.split(/\r?\n/)[0];
+  var needsMigration = firstLine.trim().split(',')[0].trim() !== 'id';
+  if (needsMigration) {
+    var migRecords = parseWeighingCSV(text);
+    await writeWeighingCSV(migRecords);
+    text = await readFile(FILE_IDS.records_csv); // 마이그레이션 후 최신 내용 다시 읽기
+  }
   var clean = text;
   if (clean.charCodeAt(0) === 0xFEFF) clean = clean.slice(1);
 
-  // 헤더에 id 컬럼 없으면 마이그레이션
-  var firstLine = clean.split(/\r?\n/)[0];
-  var needsMigration = firstLine.trim().split(',')[0].trim() !== 'id';
-  if (needsMigration) {
-    var records = parseWeighingCSV(clean);
-    await writeWeighingCSV(records);
-    clean = CSV_HEADER + '\n' + records.map(r =>
-      [r.id,r.date,r.type,r.car,r.company,r.item,r.gross,r.tare,
-       r.grossTime,r.tareTime,r.lossRate,r.loss,r.real,r.price,r.amount,r.memo].join(',')
-    ).join('\n');
-  }
-
-  var newId = b.id || genId();
+  var newId = genId();
   var row = [
     newId,
     b.date||'', b.type||'매입', '"'+(b.car||'')+'"', b.company||'',
@@ -267,7 +272,13 @@ app.post('/weighing/update', async (req, res) => {
 app.get('/records/json', async (req, res) => {
   try {
     const text = await readFile(FILE_IDS.records_csv);
-    res.json({ records: parseWeighingCSV(text) });
+    var firstLine = text.split(/\r?\n/)[0];
+    var needsMigration = firstLine.trim().split(',')[0].trim() !== 'id';
+    var records = parseWeighingCSV(text);
+    if (needsMigration) {
+      await writeWeighingCSV(records); // ID 영구 저장
+    }
+    res.json({ records });
   } catch (e) {
     res.status(500).send(e.toString());
   }
