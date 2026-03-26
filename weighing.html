@@ -316,7 +316,7 @@ if(!r)return;
 if(!confirm('이 기록을 삭제할까요?'))return;
 fetch(SERVER+'/weighing/delete',{
 method:'POST',headers:{'Content-Type':'application/json'},
-body:JSON.stringify({id:r.id})
+body:JSON.stringify({id:r.id, date:r.date, car:r.car, gross:r.gross, grossTime:r.grossTime})
 }).then(function(res){return res.json();}).then(function(json){
 if(json.ok){toast('삭제됨');loadRecords();}
 else toast('삭제 실패');
