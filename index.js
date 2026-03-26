@@ -84,27 +84,54 @@ async function sendFCM(title, body, topic = 'transactions') {
 }
 
 // ─── 계량기록 CSV 파싱/쓰기 ─────────────────────────
-const CSV_HEADER = '날짜,구분,차량,거래처,품목,총중량,공차,총중량시간,공차시간,감율,감량,인수량,단가,금액,비고';
+// id 컬럼 추가: 맨 앞에 고정 고유 ID 저장
+const CSV_HEADER = 'id,날짜,구분,차량,거래처,품목,총중량,공차,총중량시간,공차시간,감율,감량,인수량,단가,금액,비고';
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
 
 function parseWeighingCSV(text) {
   var clean = text;
   if (clean.charCodeAt(0) === 0xFEFF) clean = clean.slice(1);
   var lines = clean.trim().split(/\r?\n/).filter(function(l){ return l.trim(); });
   if (lines.length < 2) return [];
+
+  // 헤더에 id 컬럼이 있는지 확인 (구버전 CSV 호환)
+  var header = lines[0].split(',');
+  var hasId = header[0].trim() === 'id';
+
   return lines.slice(1).map(function(line, idx) {
     var c = line.split(',');
-    while (c.length < 15) c.push('');
-    return {
-      id:        idx + '_' + c[0].trim() + '_' + c[2].trim(),
-      date:      c[0].trim(),  type:      c[1].trim(),
-      car:       c[2].trim(),  company:   c[3].trim(),
-      item:      c[4].trim(),  gross:     c[5].trim(),
-      tare:      c[6].trim(),  grossTime: c[7].trim(),
-      tareTime:  c[8].trim(),  lossRate:  c[9].trim(),
-      loss:      c[10].trim(), real:      c[11].trim(),
-      price:     c[12].trim(), amount:    c[13].trim(),
-      memo:      c[14].trim(),
-    };
+    if (hasId) {
+      // 신버전: id,날짜,구분,...
+      while (c.length < 16) c.push('');
+      return {
+        id:        c[0].trim() || genId(),
+        date:      c[1].trim(),  type:      c[2].trim(),
+        car:       c[3].trim(),  company:   c[4].trim(),
+        item:      c[5].trim(),  gross:     c[6].trim(),
+        tare:      c[7].trim(),  grossTime: c[8].trim(),
+        tareTime:  c[9].trim(),  lossRate:  c[10].trim(),
+        loss:      c[11].trim(), real:      c[12].trim(),
+        price:     c[13].trim(), amount:    c[14].trim(),
+        memo:      c[15].trim(),
+      };
+    } else {
+      // 구버전 호환: id 없는 CSV → 자동 생성
+      while (c.length < 15) c.push('');
+      return {
+        id:        genId(),
+        date:      c[0].trim(),  type:      c[1].trim(),
+        car:       c[2].trim(),  company:   c[3].trim(),
+        item:      c[4].trim(),  gross:     c[5].trim(),
+        tare:      c[6].trim(),  grossTime: c[7].trim(),
+        tareTime:  c[8].trim(),  lossRate:  c[9].trim(),
+        loss:      c[10].trim(), real:      c[11].trim(),
+        price:     c[12].trim(), amount:    c[13].trim(),
+        memo:      c[14].trim(),
+      };
+    }
   });
 }
 
@@ -113,29 +140,46 @@ async function appendWeighingCSV(b) {
   const text = await readFile(FILE_IDS.records_csv);
   var clean = text;
   if (clean.charCodeAt(0) === 0xFEFF) clean = clean.slice(1);
-  const row = [
+
+  // 헤더에 id 컬럼 없으면 마이그레이션
+  var firstLine = clean.split(/\r?\n/)[0];
+  var needsMigration = firstLine.trim().split(',')[0].trim() !== 'id';
+  if (needsMigration) {
+    var records = parseWeighingCSV(clean);
+    await writeWeighingCSV(records);
+    clean = CSV_HEADER + '\n' + records.map(r =>
+      [r.id,r.date,r.type,r.car,r.company,r.item,r.gross,r.tare,
+       r.grossTime,r.tareTime,r.lossRate,r.loss,r.real,r.price,r.amount,r.memo].join(',')
+    ).join('\n');
+  }
+
+  var newId = b.id || genId();
+  var row = [
+    newId,
     b.date||'', b.type||'매입', b.car||'', b.company||'',
     b.item||'', b.gross||0, b.tare||0,
     b.grossTime||'', b.tareTime||'',
     b.lossRate||0, b.loss||0, b.real||0,
     b.price||0, b.amount||0, b.memo||''
   ].join(',');
-  const newText = clean.trimEnd() + String.fromCharCode(10) + row;
+
+  const newText = clean.trimEnd() + '\n' + row;
   const stream = Readable.from([newText]);
   await drive.files.update({
     fileId: FILE_IDS.records_csv,
     media: { mimeType: 'text/csv', body: stream }
   });
+  return newId;
 }
 
 // ─── 계량기록 수정용 CSV 전체쓰기 ────────────────────
 async function writeWeighingCSV(records) {
   const { Readable } = require('stream');
   const rows = records.map(r =>
-    [r.date,r.type,r.car,r.company,r.item,r.gross,r.tare,
+    [r.id,r.date,r.type,r.car,r.company,r.item,r.gross,r.tare,
      r.grossTime,r.tareTime,r.lossRate,r.loss,r.real,r.price,r.amount,r.memo].join(',')
   );
-  const newText = CSV_HEADER + String.fromCharCode(10) + rows.join(String.fromCharCode(10));
+  const newText = CSV_HEADER + '\n' + rows.join('\n');
   const stream = Readable.from([newText]);
   await drive.files.update({
     fileId: FILE_IDS.records_csv,
@@ -163,15 +207,16 @@ app.post('/records', async (req, res) => {
   }
 });
 
-// ─── 추가: 계량기록 삭제 ──────────────────────────────
+// ─── 계량기록 삭제 ──────────────────────────────────
 app.post('/weighing/delete', async (req, res) => {
   try {
-    const { date, car, gross, grossTime } = req.body;
+    const { id } = req.body;
     const text = await readFile(FILE_IDS.records_csv);
     const records = parseWeighingCSV(text);
-    const filtered = records.filter(function(r) {
-      return !(r.date === date && r.car === car && String(r.gross) === String(gross) && r.grossTime === grossTime);
-    });
+    const filtered = records.filter(r => String(r.id) !== String(id));
+    if (filtered.length === records.length) {
+      return res.status(404).json({ ok: false, error: '기록을 찾을 수 없음' });
+    }
     await writeWeighingCSV(filtered);
     res.json({ ok: true });
   } catch (e) {
@@ -179,33 +224,35 @@ app.post('/weighing/delete', async (req, res) => {
   }
 });
 
-// ─── 추가: 계량기록 저장 ──────────────────────────────
+// ─── 계량기록 저장 ──────────────────────────────────
 app.post('/weighing/save', async (req, res) => {
   try {
-    await appendWeighingCSV(req.body);
-    res.json({ ok: true });
+    const newId = await appendWeighingCSV(req.body);
+    res.json({ ok: true, id: newId });
   } catch (e) {
     res.status(500).json({ ok: false, error: e.toString() });
   }
 });
 
-// ─── 추가: 계량기록 수정 ──────────────────────────────
+// ─── 계량기록 수정 ──────────────────────────────────
 app.post('/weighing/update', async (req, res) => {
   try {
     const b = req.body;
     const text = await readFile(FILE_IDS.records_csv);
     const records = parseWeighingCSV(text);
-    const idx = parseInt(String(b.id).split('_')[0]);
-    if (isNaN(idx) || idx < 0 || idx >= records.length) {
+
+    // id 기준으로 찾기 (구버전 index 방식 완전 제거)
+    const idx = records.findIndex(r => String(r.id) === String(b.id));
+    if (idx === -1) {
       return res.status(404).json({ ok: false, error: '기록을 찾을 수 없음' });
     }
     records[idx] = {
-      id: records[idx].id,
-      date: b.date, type: b.type, car: b.car, company: b.company,
-      item: b.item, gross: b.gross, tare: b.tare,
-      grossTime: b.grossTime, tareTime: b.tareTime,
-      lossRate: b.lossRate, loss: b.loss, real: b.real,
-      price: b.price, amount: b.amount, memo: b.memo,
+      id:       String(b.id),
+      date:     b.date,     type:     b.type,     car:      b.car,
+      company:  b.company,  item:     b.item,      gross:    b.gross,
+      tare:     b.tare,     grossTime:b.grossTime, tareTime: b.tareTime,
+      lossRate: b.lossRate, loss:     b.loss,      real:     b.real,
+      price:    b.price,    amount:   b.amount,    memo:     b.memo,
     };
     await writeWeighingCSV(records);
     res.json({ ok: true });
@@ -214,7 +261,7 @@ app.post('/weighing/update', async (req, res) => {
   }
 });
 
-// ─── 추가: 계량기록 조회 (웹앱용 JSON 반환) ──────────
+// ─── 계량기록 조회 (웹앱용 JSON 반환) ───────────────
 app.get('/records/json', async (req, res) => {
   try {
     const text = await readFile(FILE_IDS.records_csv);
