@@ -533,29 +533,29 @@ cx.rotate(Math.PI/2);
 
 cx.fillStyle='#fff'; cx.fillRect(0,0,W,H);
 
-// 헤더
-cx.fillStyle='#4A6FA5';cx.fillRect(0,0,W,HDR);
+// 헤더 - 표 너비만큼만
+cx.fillStyle='#4A6FA5';cx.fillRect(PAD,0,tableRight-PAD,HDR);
 cx.fillStyle='#fff';cx.font='bold 40px sans-serif';cx.textAlign='center';
-cx.fillText('매  입  명  세  서',W/2,HDR/2+14);
+cx.fillText('매  입  명  세  서',(PAD+tableRight)/2,HDR/2+15);
 
 // 출력일자
-cx.fillStyle='#f5f5f5';cx.fillRect(0,HDR,W,INFO);
-cx.strokeStyle='#ccd4e8';cx.lineWidth=1;cx.strokeRect(0,HDR,W,INFO);
+cx.fillStyle='#f5f5f5';cx.fillRect(PAD,HDR,tableRight-PAD,INFO);
+cx.strokeStyle='#ccd4e8';cx.lineWidth=1;cx.strokeRect(PAD,HDR,tableRight-PAD,INFO);
 cx.fillStyle='#333';cx.font='16px sans-serif';cx.textAlign='right';
 var now=new Date();
-cx.fillText('출력일자: '+now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'  '+pad(now.getHours())+':'+pad(now.getMinutes()),W-PAD,HDR+INFO/2+6);
+cx.fillText('출력일자: '+now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'  '+pad(now.getHours())+':'+pad(now.getMinutes()),tableRight-6,HDR+INFO/2+6);
 
 // 열 X 좌표
 var xs=[PAD];
 COLS.forEach(function(c){xs.push(xs[xs.length-1]+c.w);});
-var tableRight=xs[xs.length-1];
+var tableRight2=xs[xs.length-1];
 
 var y=HDR+INFO;
 
 // 컬럼 헤더
-cx.fillStyle='#dde5f5';cx.fillRect(PAD,y,tableRight-PAD,CHDR);
-cx.strokeStyle='#8090b0';cx.lineWidth=1.5;cx.strokeRect(PAD,y,tableRight-PAD,CHDR);
-cx.fillStyle='#1a2e5a';cx.font='bold 18px sans-serif';
+cx.fillStyle='#dde5f5';cx.fillRect(PAD,y,tableRight2-PAD,CHDR);
+cx.strokeStyle='#8090b0';cx.lineWidth=1.5;cx.strokeRect(PAD,y,tableRight2-PAD,CHDR);
+cx.fillStyle='#1a2e5a';cx.font='bold 20px sans-serif';
 COLS.forEach(function(c,i){
   cx.textAlign='center';cx.fillText(c.h,xs[i]+c.w/2,y+CHDR/2+7);
   cx.strokeStyle='#8090b0';cx.lineWidth=1;
@@ -566,32 +566,37 @@ y+=CHDR;
 // 데이터 행
 var totR=0,totA=0;
 target.forEach(function(r,ri){
-  cx.fillStyle=ri%2===0?'#fff':'#f0f4ff';cx.fillRect(PAD,y,tableRight-PAD,ROW);
-  cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;cx.strokeRect(PAD,y,tableRight-PAD,ROW);
+  cx.fillStyle=ri%2===0?'#fff':'#f0f4ff';cx.fillRect(PAD,y,tableRight2-PAD,ROW);
+  cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;cx.strokeRect(PAD,y,tableRight2-PAD,ROW);
   COLS.forEach(function(_,i){
     cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;
     cx.beginPath();cx.moveTo(xs[i],y);cx.lineTo(xs[i],y+ROW);cx.stroke();
   });
-  cx.fillStyle='#1a1a2e';cx.font='17px sans-serif';
+  cx.fillStyle='#1a1a2e';cx.font='20px sans-serif';
   COLS.forEach(function(c,i){
     var val=c.num?fmt(r[c.key]):(r[c.key]||'');
+    // 박스 너비에 맞게 폰트 자동 축소
+    var maxW=c.w-8;
+    var fs=20;
+    cx.font=fs+'px sans-serif';
+    while(cx.measureText(val).width>maxW&&fs>10){fs--;cx.font=fs+'px sans-serif';}
     cx.textAlign=c.align;
-    var tx=c.align==='right'?xs[i]+c.w-12:c.align==='center'?xs[i]+c.w/2:xs[i]+10;
-    cx.fillText(val,tx,y+ROW/2+13);
+    var tx=c.align==='right'?xs[i]+c.w-4:c.align==='center'?xs[i]+c.w/2:xs[i]+4;
+    cx.fillText(val,tx,y+ROW/2+7);
   });
   totR+=Number(r.real)||0;totA+=Number(r.amount)||0;y+=ROW;
 });
 
 // 합계 행
-cx.fillStyle='#f5f5f5';cx.fillRect(PAD,y,tableRight-PAD,ROW);
+cx.fillStyle='#f5f5f5';cx.fillRect(PAD,y,tableRight2-PAD,ROW);
 cx.strokeStyle='#8090b0';cx.lineWidth=1.5;
-cx.beginPath();cx.moveTo(PAD,y);cx.lineTo(tableRight,y);cx.stroke();
-cx.beginPath();cx.moveTo(PAD,y+ROW);cx.lineTo(tableRight,y+ROW);cx.stroke();
-cx.fillStyle='#1a2e5a';cx.font='bold 18px sans-serif';
+cx.beginPath();cx.moveTo(PAD,y);cx.lineTo(tableRight2,y);cx.stroke();
+cx.beginPath();cx.moveTo(PAD,y+ROW);cx.lineTo(tableRight2,y+ROW);cx.stroke();
+cx.fillStyle='#1a2e5a';cx.font='bold 20px sans-serif';
 cx.textAlign='center';cx.fillText('합  계',xs[0]+COLS[0].w/2,y+ROW/2+7);
 cx.textAlign='right';
-cx.fillText(fmt(totR),xs[7]+COLS[7].w-6,y+ROW/2+7);
-cx.fillText(fmt(totA),xs[9]+COLS[9].w-6,y+ROW/2+7);
+cx.fillText(fmt(totR),xs[7]+COLS[7].w-4,y+ROW/2+7);
+cx.fillText(fmt(totA),xs[9]+COLS[9].w-4,y+ROW/2+7);
 
 cx.restore();
 shareImg(cv,'매입명세서_'+from+'_'+to+'.jpg');
