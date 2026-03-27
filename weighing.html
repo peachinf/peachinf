@@ -494,66 +494,100 @@ var target=records.filter(function(r){
 return r.type==='매입'&&(!from||r.date>=from)&&(!to||r.date<=to)&&(!company||r.company.indexOf(company)>=0);
 }).sort(function(a,b){return a.date>b.date?1:-1;});
 if(!target.length){toast('매입 기록 없음');return;}
+
+// A4 가로 고정 크기 (3508 x 2480 @ 300dpi 비율)
+var W=2480, H=1754;
+var PAD=60; // 좌우 여백
+
 var COLS=[
-{h:'일자',w:105,key:'date',align:'center'},
-{h:'차량번호',w:90,key:'car',align:'center'},
-{h:'거래처',w:110,key:'company',align:'center'},
-{h:'품목',w:90,key:'item',align:'center'},
-{h:'총중량',w:80,key:'gross',align:'right',num:true},
-{h:'공차',w:75,key:'tare',align:'right',num:true},
-{h:'감량',w:65,key:'loss',align:'right',num:true},
-{h:'인수량',w:80,key:'real',align:'right',num:true},
-{h:'단가',w:65,key:'price',align:'right',num:true},
-{h:'금액',w:100,key:'amount',align:'right',num:true},
-{h:'비고',w:70,key:'memo',align:'left'},
+{h:'일자',      w:220,key:'date',   align:'center'},
+{h:'차량번호',  w:160,key:'car',    align:'center'},
+{h:'거래처',    w:260,key:'company',align:'center'},
+{h:'품목',      w:200,key:'item',   align:'center'},
+{h:'총중량',    w:160,key:'gross',  align:'right',num:true},
+{h:'공차',      w:150,key:'tare',   align:'right',num:true},
+{h:'감량',      w:130,key:'loss',   align:'right',num:true},
+{h:'인수량',    w:160,key:'real',   align:'right',num:true},
+{h:'단가',      w:130,key:'price',  align:'right',num:true},
+{h:'금액',      w:200,key:'amount', align:'right',num:true},
+{h:'비고',      w:230,key:'memo',   align:'left'},
 ];
-var HDR=56,INFO=30,CHDR=36,ROW=40;
-var W=COLS.reduce(function(s,c){return s+c.w;},0);
-var H=HDR+INFO+CHDR+(target.length+1)*ROW;
+
+// 열 너비를 W-PAD*2 에 맞게 비례 조정
+var totalW=COLS.reduce(function(s,c){return s+c.w;},0);
+var scale=(W-PAD*2)/totalW;
+COLS.forEach(function(c){c.w=Math.round(c.w*scale);});
+
+var HDR=130, INFO=60, CHDR=80, ROW=90;
+// A4 고정 높이 - 내용이 적어도 하단 여백 유지
+var tableH=CHDR+(target.length+1)*ROW;
+// 최소 높이 A4 비율 유지
+var minH=HDR+INFO+tableH+100;
+if(H<minH) H=minH;
+
 var cv=mkCanvas(W,H),cx=cv.getContext('2d');
 cx.fillStyle='#fff';cx.fillRect(0,0,W,H);
+
+// 헤더
 cx.fillStyle='#4A6FA5';cx.fillRect(0,0,W,HDR);
-cx.fillStyle='#fff';cx.font='bold 26px sans-serif';cx.textAlign='center';
-cx.fillText('매  입  명  세  서',W/2,HDR/2+9);
+cx.fillStyle='#fff';cx.font='bold 64px sans-serif';cx.textAlign='center';
+cx.fillText('매  입  명  세  서',W/2,HDR/2+22);
+
+// 출력일자
 cx.fillStyle='#f5f5f5';cx.fillRect(0,HDR,W,INFO);
-cx.strokeStyle='#ccd4e8';cx.lineWidth=0.5;cx.strokeRect(0,HDR,W,INFO);
-cx.fillStyle='#333';cx.font='12px sans-serif';cx.textAlign='right';
+cx.strokeStyle='#ccd4e8';cx.lineWidth=1;cx.strokeRect(0,HDR,W,INFO);
+cx.fillStyle='#333';cx.font='28px sans-serif';cx.textAlign='right';
 var now=new Date();
-cx.fillText('출력일자: '+now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'  '+pad(now.getHours())+':'+pad(now.getMinutes()),W-8,HDR+INFO/2+5);
-var xs=[0];
+cx.fillText('출력일자: '+now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'  '+pad(now.getHours())+':'+pad(now.getMinutes()),W-PAD,HDR+INFO/2+10);
+
+// 열 X 좌표
+var xs=[PAD];
 COLS.forEach(function(c){xs.push(xs[xs.length-1]+c.w);});
+var tableRight=xs[xs.length-1];
+
 var y=HDR+INFO;
-cx.fillStyle='#F0F4FF';cx.fillRect(0,y,W,CHDR);
-cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;cx.strokeRect(0,y,W,CHDR);
-cx.fillStyle='#2c3e6b';cx.font='bold 13px sans-serif';
+
+// 컬럼 헤더
+cx.fillStyle='#dde5f5';cx.fillRect(PAD,y,tableRight-PAD,CHDR);
+cx.strokeStyle='#8090b0';cx.lineWidth=1.5;cx.strokeRect(PAD,y,tableRight-PAD,CHDR);
+cx.fillStyle='#1a2e5a';cx.font='bold 30px sans-serif';
 COLS.forEach(function(c,i){
-cx.textAlign='center';cx.fillText(c.h,xs[i]+c.w/2,y+CHDR/2+5);
-cx.beginPath();cx.moveTo(xs[i],y);cx.lineTo(xs[i],y+CHDR);cx.stroke();
+  cx.textAlign='center';cx.fillText(c.h,xs[i]+c.w/2,y+CHDR/2+11);
+  cx.strokeStyle='#8090b0';cx.lineWidth=1;
+  cx.beginPath();cx.moveTo(xs[i],y);cx.lineTo(xs[i],y+CHDR);cx.stroke();
 });
 y+=CHDR;
+
+// 데이터 행
 var totR=0,totA=0;
 target.forEach(function(r,ri){
-cx.fillStyle=ri%2===0?'#fff':'#f8faff';cx.fillRect(0,y,W,ROW);
-cx.strokeStyle='#dde3f0';cx.lineWidth=0.5;cx.strokeRect(0,y,W,ROW);
-COLS.forEach(function(_,i){cx.beginPath();cx.moveTo(xs[i],y);cx.lineTo(xs[i],y+ROW);cx.stroke();});
-cx.fillStyle='#1a1a2e';cx.font='13px sans-serif';
-COLS.forEach(function(c,i){
-var val=c.num?fmt(r[c.key]):(r[c.key]||'');
-cx.textAlign=c.align;
-var tx=c.align==='right'?xs[i]+c.w-5:c.align==='center'?xs[i]+c.w/2:xs[i]+5;
-cx.fillText(val,tx,y+ROW/2+5);
+  cx.fillStyle=ri%2===0?'#fff':'#f0f4ff';cx.fillRect(PAD,y,tableRight-PAD,ROW);
+  cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;cx.strokeRect(PAD,y,tableRight-PAD,ROW);
+  COLS.forEach(function(_,i){
+    cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;
+    cx.beginPath();cx.moveTo(xs[i],y);cx.lineTo(xs[i],y+ROW);cx.stroke();
+  });
+  cx.fillStyle='#1a1a2e';cx.font='28px sans-serif';
+  COLS.forEach(function(c,i){
+    var val=c.num?fmt(r[c.key]):(r[c.key]||'');
+    cx.textAlign=c.align;
+    var tx=c.align==='right'?xs[i]+c.w-12:c.align==='center'?xs[i]+c.w/2:xs[i]+10;
+    cx.fillText(val,tx,y+ROW/2+10);
+  });
+  totR+=Number(r.real)||0;totA+=Number(r.amount)||0;y+=ROW;
 });
-totR+=Number(r.real)||0;totA+=Number(r.amount)||0;y+=ROW;
-});
-cx.fillStyle='#fff';cx.fillRect(0,y,W,ROW);
-cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;
-cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke();
-cx.beginPath();cx.moveTo(0,y+ROW);cx.lineTo(W,y+ROW);cx.stroke();
-cx.fillStyle='#1a1a2e';cx.font='bold 13px sans-serif';
-cx.textAlign='center';cx.fillText('합계',xs[0]+COLS[0].w/2,y+ROW/2+5);
+
+// 합계 행
+cx.fillStyle='#f5f5f5';cx.fillRect(PAD,y,tableRight-PAD,ROW);
+cx.strokeStyle='#8090b0';cx.lineWidth=1.5;
+cx.beginPath();cx.moveTo(PAD,y);cx.lineTo(tableRight,y);cx.stroke();
+cx.beginPath();cx.moveTo(PAD,y+ROW);cx.lineTo(tableRight,y+ROW);cx.stroke();
+cx.fillStyle='#1a2e5a';cx.font='bold 30px sans-serif';
+cx.textAlign='center';cx.fillText('합  계',xs[0]+COLS[0].w/2,y+ROW/2+11);
 cx.textAlign='right';
-cx.fillText(fmt(totR),xs[7]+COLS[7].w-5,y+ROW/2+5);
-cx.fillText(fmt(totA),xs[9]+COLS[9].w-5,y+ROW/2+5);
+cx.fillText(fmt(totR),xs[7]+COLS[7].w-12,y+ROW/2+11);
+cx.fillText(fmt(totA),xs[9]+COLS[9].w-12,y+ROW/2+11);
+
 shareImg(cv,'매입명세서_'+from+'_'+to+'.jpg');
 }
 
