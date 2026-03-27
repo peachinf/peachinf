@@ -495,8 +495,8 @@ return r.type==='매입'&&(!from||r.date>=from)&&(!to||r.date<=to)&&(!company||r
 }).sort(function(a,b){return a.date>b.date?1:-1;});
 if(!target.length){toast('매입 기록 없음');return;}
 
-// A4 가로 고정 크기
-var W=2480, H=1754;
+// 가로 고정 크기 (Android WebView 처리 가능)
+var W=1240, H=877;
 var PAD=50; // 좌우 여백
 
 var COLS=[
@@ -518,9 +518,8 @@ var totalW=COLS.reduce(function(s,c){return s+c.w;},0);
 var scale=(W-PAD*2)/totalW;
 COLS.forEach(function(c){c.w=Math.round(c.w*scale);});
 
-var HDR=160, INFO=70, CHDR=100, ROW=110;
-// A4 고정 높이 유지 - 내용 적어도 하단 여백
-var minH=HDR+INFO+CHDR+(target.length+1)*ROW+100;
+var HDR=80, INFO=35, CHDR=50, ROW=55;
+var minH=HDR+INFO+CHDR+(target.length+1)*ROW+50;
 if(H<minH) H=minH;
 
 var cv=mkCanvas(W,H),cx=cv.getContext('2d');
@@ -528,15 +527,15 @@ cx.fillStyle='#fff';cx.fillRect(0,0,W,H);
 
 // 헤더
 cx.fillStyle='#4A6FA5';cx.fillRect(0,0,W,HDR);
-cx.fillStyle='#fff';cx.font='bold 80px sans-serif';cx.textAlign='center';
-cx.fillText('매  입  명  세  서',W/2,HDR/2+28);
+cx.fillStyle='#fff';cx.font='bold 40px sans-serif';cx.textAlign='center';
+cx.fillText('매  입  명  세  서',W/2,HDR/2+14);
 
 // 출력일자
 cx.fillStyle='#f5f5f5';cx.fillRect(0,HDR,W,INFO);
 cx.strokeStyle='#ccd4e8';cx.lineWidth=1;cx.strokeRect(0,HDR,W,INFO);
-cx.fillStyle='#333';cx.font='32px sans-serif';cx.textAlign='right';
+cx.fillStyle='#333';cx.font='16px sans-serif';cx.textAlign='right';
 var now=new Date();
-cx.fillText('출력일자: '+now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'  '+pad(now.getHours())+':'+pad(now.getMinutes()),W-PAD,HDR+INFO/2+12);
+cx.fillText('출력일자: '+now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'  '+pad(now.getHours())+':'+pad(now.getMinutes()),W-PAD,HDR+INFO/2+6);
 
 // 열 X 좌표
 var xs=[PAD];
