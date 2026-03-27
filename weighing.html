@@ -137,6 +137,8 @@ var SERVER='https://peachinf-16192067572.europe-west1.run.app';
 var records=[];
 var _editId=null;
 
+function vib(ms){try{navigator.vibrate&&navigator.vibrate(ms||40);}catch(e){}}
+
 window.onload=function(){
 var today=todayStr(),now=new Date();
 document.getElementById('fDate').value=today;
@@ -152,7 +154,7 @@ function pad(n){return String(n).padStart(2,'0');}
 function pn(s){return parseFloat(String(s||0).replace(/,/g,''))||0;}
 function fmt(v){return v?Number(v).toLocaleString('ko-KR'):'0';}
 
-function switchTab(i){
+function switchTab(i){vib();
 [0,1].forEach(function(j){
 document.getElementById('tab'+j).classList.toggle('on',i===j);
 document.getElementById('page'+j).classList.toggle('on',i===j);
@@ -202,7 +204,7 @@ var loss=pn(document.getElementById('fLoss').value);
 if(base>0)document.getElementById('fLossRate').value=Math.round(loss/base*100)||0;
 calcAll();_sync=false;
 }
-function resetForm(){
+function resetForm(){vib();
 var now=new Date();
 _editId=null;
 document.getElementById('fType').value='매입';
@@ -215,7 +217,7 @@ document.getElementById('fAmount').value='';
 }
 
 var _lastKw='';
-async function loadRecords(){
+async function loadRecords(){vib();
 var curKw=document.getElementById('sKw').value;
 if(curKw && curKw===_lastKw){
 document.getElementById('sKw').value='';
@@ -238,7 +240,7 @@ toast('서버 연결 실패');
 }
 }
 
-async function saveRecord(){
+async function saveRecord(){vib();
 var car=document.getElementById('fCar').value.trim();
 var comp=document.getElementById('fCompany').value.trim();
 if(!car||!comp){toast('차량번호와 거래처를 입력하세요');return;}
@@ -325,7 +327,7 @@ else toast('삭제 실패');
 }
 function cancelHold(){clearTimeout(_holdTimer);_holdTimer=null;}
 
-function loadToForm(id){
+function loadToForm(id){vib();
 var r=records.find(function(x){return String(x.id)===String(id);});
 if(!r)return;
 _editId=r.id||null;
@@ -347,7 +349,7 @@ calcAll();switchTab(0);window.scrollTo(0,0);toast('기록 불러옴');
 
 function mkCanvas(w,h){var cv=document.createElement('canvas');cv.width=w;cv.height=h;return cv;}
 
-function genCertImg(){
+function genCertImg(){vib();
   var date=document.getElementById('fDate').value;
   var car=document.getElementById('fCar').value.trim()||'-';
   var company=document.getElementById('fCompany').value.trim()||'-';
@@ -486,7 +488,7 @@ function genCertImg(){
   shareImg(cv,'계근표_'+car+'_'+date+'.jpg');
 }
 
-function genBuyImg(){
+function genBuyImg(){vib();
 var from=document.getElementById('sFrom').value||todayStr().slice(0,7)+'-01';
 var to=document.getElementById('sTo').value||todayStr();
 var company=document.getElementById('fCompany').value.trim();
