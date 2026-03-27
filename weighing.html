@@ -137,7 +137,7 @@ var SERVER='https://peachinf-16192067572.europe-west1.run.app';
 var records=[];
 var _editId=null;
 
-function vib(ms){try{navigator.vibrate&&navigator.vibrate(ms||40);}catch(e){}}
+function vib(){try{if(window.AndroidShare)window.AndroidShare.vibrate();}catch(e){}}
 
 window.onload=function(){
 var today=todayStr(),now=new Date();
