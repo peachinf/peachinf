@@ -533,6 +533,11 @@ cx.rotate(Math.PI/2);
 
 cx.fillStyle='#fff'; cx.fillRect(0,0,W,H);
 
+// 열 X 좌표
+var xs=[PAD];
+COLS.forEach(function(c){xs.push(xs[xs.length-1]+c.w);});
+var tableRight=xs[xs.length-1];
+
 // 헤더 - 표 너비만큼만
 cx.fillStyle='#4A6FA5';cx.fillRect(PAD,0,tableRight-PAD,HDR);
 cx.fillStyle='#fff';cx.font='bold 40px sans-serif';cx.textAlign='center';
@@ -545,16 +550,11 @@ cx.fillStyle='#333';cx.font='16px sans-serif';cx.textAlign='right';
 var now=new Date();
 cx.fillText('출력일자: '+now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'  '+pad(now.getHours())+':'+pad(now.getMinutes()),tableRight-6,HDR+INFO/2+6);
 
-// 열 X 좌표
-var xs=[PAD];
-COLS.forEach(function(c){xs.push(xs[xs.length-1]+c.w);});
-var tableRight2=xs[xs.length-1];
-
 var y=HDR+INFO;
 
 // 컬럼 헤더
-cx.fillStyle='#dde5f5';cx.fillRect(PAD,y,tableRight2-PAD,CHDR);
-cx.strokeStyle='#8090b0';cx.lineWidth=1.5;cx.strokeRect(PAD,y,tableRight2-PAD,CHDR);
+cx.fillStyle='#dde5f5';cx.fillRect(PAD,y,tableRight-PAD,CHDR);
+cx.strokeStyle='#8090b0';cx.lineWidth=1.5;cx.strokeRect(PAD,y,tableRight-PAD,CHDR);
 cx.fillStyle='#1a2e5a';cx.font='bold 20px sans-serif';
 COLS.forEach(function(c,i){
   cx.textAlign='center';cx.fillText(c.h,xs[i]+c.w/2,y+CHDR/2+7);
@@ -566,8 +566,8 @@ y+=CHDR;
 // 데이터 행
 var totR=0,totA=0;
 target.forEach(function(r,ri){
-  cx.fillStyle=ri%2===0?'#fff':'#f0f4ff';cx.fillRect(PAD,y,tableRight2-PAD,ROW);
-  cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;cx.strokeRect(PAD,y,tableRight2-PAD,ROW);
+  cx.fillStyle=ri%2===0?'#fff':'#f0f4ff';cx.fillRect(PAD,y,tableRight-PAD,ROW);
+  cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;cx.strokeRect(PAD,y,tableRight-PAD,ROW);
   COLS.forEach(function(_,i){
     cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;
     cx.beginPath();cx.moveTo(xs[i],y);cx.lineTo(xs[i],y+ROW);cx.stroke();
@@ -588,10 +588,10 @@ target.forEach(function(r,ri){
 });
 
 // 합계 행
-cx.fillStyle='#f5f5f5';cx.fillRect(PAD,y,tableRight2-PAD,ROW);
+cx.fillStyle='#f5f5f5';cx.fillRect(PAD,y,tableRight-PAD,ROW);
 cx.strokeStyle='#8090b0';cx.lineWidth=1.5;
-cx.beginPath();cx.moveTo(PAD,y);cx.lineTo(tableRight2,y);cx.stroke();
-cx.beginPath();cx.moveTo(PAD,y+ROW);cx.lineTo(tableRight2,y+ROW);cx.stroke();
+cx.beginPath();cx.moveTo(PAD,y);cx.lineTo(tableRight,y);cx.stroke();
+cx.beginPath();cx.moveTo(PAD,y+ROW);cx.lineTo(tableRight,y+ROW);cx.stroke();
 cx.fillStyle='#1a2e5a';cx.font='bold 20px sans-serif';
 cx.textAlign='center';cx.fillText('합  계',xs[0]+COLS[0].w/2,y+ROW/2+7);
 cx.textAlign='right';
