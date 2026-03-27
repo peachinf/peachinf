@@ -490,8 +490,9 @@ function genBuyImg(){
 var from=document.getElementById('sFrom').value||todayStr().slice(0,7)+'-01';
 var to=document.getElementById('sTo').value||todayStr();
 var company=document.getElementById('fCompany').value.trim();
+var kw=document.getElementById('sKw').value.trim();
 var target=records.filter(function(r){
-return r.type==='매입'&&(!from||r.date>=from)&&(!to||r.date<=to)&&(!company||r.company.indexOf(company)>=0);
+return r.type==='매입'&&(!from||r.date>=from)&&(!to||r.date<=to)&&(!company||r.company.indexOf(company)>=0)&&(!kw||r.company.indexOf(kw)>=0);
 }).sort(function(a,b){return a.date>b.date?1:-1;});
 if(!target.length){toast('매입 기록 없음');return;}
 
@@ -566,7 +567,7 @@ y+=CHDR;
 // 데이터 행
 var totR=0,totA=0;
 target.forEach(function(r,ri){
-  cx.fillStyle=ri%2===0?'#fff':'#f0f4ff';cx.fillRect(PAD,y,tableRight-PAD,ROW);
+  cx.fillStyle='#fff';cx.fillRect(PAD,y,tableRight-PAD,ROW);
   cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;cx.strokeRect(PAD,y,tableRight-PAD,ROW);
   COLS.forEach(function(_,i){
     cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;
