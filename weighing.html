@@ -495,8 +495,8 @@ return r.type==='매입'&&(!from||r.date>=from)&&(!to||r.date<=to)&&(!company||r
 }).sort(function(a,b){return a.date>b.date?1:-1;});
 if(!target.length){toast('매입 기록 없음');return;}
 
-// A4 세로 고정 크기
-var W=1754, H=2480;
+// A4 가로 고정 크기
+var W=2480, H=1754;
 var PAD=50; // 좌우 여백
 
 var COLS=[
