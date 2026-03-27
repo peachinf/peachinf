@@ -490,9 +490,9 @@ function genBuyImg(){
 var from=document.getElementById('sFrom').value||todayStr().slice(0,7)+'-01';
 var to=document.getElementById('sTo').value||todayStr();
 var company=document.getElementById('fCompany').value.trim();
-var kw=document.getElementById('sKw').value.trim();
+var kw=(document.getElementById('sKw').value.trim()||company);
 var target=records.filter(function(r){
-return r.type==='매입'&&(!from||r.date>=from)&&(!to||r.date<=to)&&(!company||r.company.indexOf(company)>=0)&&(!kw||r.company.indexOf(kw)>=0);
+return r.type==='매입'&&(!from||r.date>=from)&&(!to||r.date<=to)&&(!kw||r.company.indexOf(kw)>=0);
 }).sort(function(a,b){return a.date>b.date?1:-1;});
 if(!target.length){toast('매입 기록 없음');return;}
 
