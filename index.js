@@ -1,7 +1,7 @@
+process.env.TZ = 'Asia/Seoul';
 const express = require('express');
 const { google } = require('googleapis');
 const admin = require('firebase-admin');
-
 const app = express();
 app.use(express.json());
 
