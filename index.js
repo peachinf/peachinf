@@ -30,6 +30,8 @@ const drive = google.drive({
 });
 
 // ─── 파일 ID ─────────────────────────────────────────
+const BACKUP_FOLDER_ID = '1tCkA7nT6j3BEyRh0RvrXbrZkUYiNwhiz';
+
 const FILE_IDS = {
   records:       '1y-QfCGxVR-2_NwCJUbBHpU9Yf2dApyGG',
   weighing:      '1sMvG-YvC02KqVtZNrivQfubzzuhruiqG',
@@ -79,6 +81,47 @@ function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
+// ─── 백업 ────────────────────────────────────────────
+async function backupToday(records) {
+  try {
+    const { Readable } = require('stream');
+    const today = new Date().toISOString().slice(0, 10);
+    const fileName = `weighing_records_${today}.json`;
+    const content = JSON.stringify({ records }, null, 2);
+
+    const list = await drive.files.list({
+      q: `'${BACKUP_FOLDER_ID}' in parents and name='${fileName}' and trashed=false`,
+      fields: 'files(id)',
+    });
+
+    if (list.data.files.length > 0) {
+      await drive.files.update({
+        fileId: list.data.files[0].id,
+        media: { mimeType: 'application/json', body: Readable.from([content]) },
+      });
+    } else {
+      await drive.files.create({
+        requestBody: { name: fileName, parents: [BACKUP_FOLDER_ID] },
+        media: { mimeType: 'application/json', body: Readable.from([content]) },
+      });
+
+      const all = await drive.files.list({
+        q: `'${BACKUP_FOLDER_ID}' in parents and trashed=false`,
+        fields: 'files(id, name)',
+        orderBy: 'name asc',
+      });
+      const files = all.data.files;
+      if (files.length > 7) {
+        for (let i = 0; i < files.length - 7; i++) {
+          await drive.files.delete({ fileId: files[i].id });
+        }
+      }
+    }
+  } catch (e) {
+    console.error('백업 오류:', e.message);
+  }
+}
+
 // ─── 계량기록 읽기/쓰기 (JSON) ───────────────────────
 async function readWeighingRecords() {
   const text = await readFile(FILE_IDS.weighing);
@@ -88,6 +131,7 @@ async function readWeighingRecords() {
 
 async function writeWeighingRecords(records) {
   await writeFile(FILE_IDS.weighing, { records });
+  await backupToday(records);
 }
 
 // ─── 기존: 일정 ──────────────────────────────────────
