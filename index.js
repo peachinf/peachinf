@@ -32,7 +32,7 @@ const drive = google.drive({
 // ─── 파일 ID ─────────────────────────────────────────
 const FILE_IDS = {
   records:       '1y-QfCGxVR-2_NwCJUbBHpU9Yf2dApyGG',
-  records_csv:   '1SxFpdgxaOUGIkW6dCwPdPeUK1z3ddm_E',
+  weighing:      '1sMvG-YvC02KqVtZNrivQfubzzuhruiqG',
   requests:      '11DU2GEJP6jz8S8VfrTYhVRruxSKaeLRR',
   sell_requests: '1LcKY3kBLGZqmpJ4naKiC6ZX9SBLczUFn',
   pricing:       '1A1F5rzzXT2H56UDwYVptDkVoW5KHqTv1',
@@ -40,10 +40,8 @@ const FILE_IDS = {
   history:       '1HRK3B14zYaElV8tga45Ib3qqDeJyR-Nd',
 };
 
-// ─── 순차처리 Queue (핵심) ───────────────────────────
-// 계량기록 쓰기 요청이 동시에 와도 하나씩 순서대로 처리
+// ─── 순차처리 Queue ───────────────────────────────────
 let _weighingQueue = Promise.resolve();
-
 function weighingQueue(fn) {
   _weighingQueue = _weighingQueue.then(() => fn()).catch((e) => { throw e; });
   return _weighingQueue;
@@ -76,69 +74,20 @@ async function sendFCM(title, body, topic = 'transactions') {
   }
 }
 
-// ─── 계량기록 CSV 파싱/쓰기 ─────────────────────────
-const CSV_HEADER = 'id,날짜,구분,차량,거래처,품목,총중량,공차,총중량시간,공차시간,감율,감량,인수량,단가,금액,비고';
-
+// ─── ID 생성 ─────────────────────────────────────────
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
-function parseCSVLine(line) {
-  var result = [], cur = '', inQ = false;
-  for (var i = 0; i < line.length; i++) {
-    var ch = line[i];
-    if (ch === '"') { inQ = !inQ; }
-    else if (ch === ',' && !inQ) { result.push(cur); cur = ''; }
-    else { cur += ch; }
-  }
-  result.push(cur);
-  return result;
-}
-
-function parseWeighingCSV(text) {
-  var clean = text;
-  if (clean.charCodeAt(0) === 0xFEFF) clean = clean.slice(1);
-  var lines = clean.trim().split(/\r?\n/).filter(l => l.trim());
-  if (lines.length < 2) return [];
-  var hasId = lines[0].split(',')[0].trim() === 'id';
-  return lines.slice(1).map(line => {
-    var c = parseCSVLine(line);
-    if (hasId) {
-      while (c.length < 16) c.push('');
-      return { id: c[0].trim(), date: c[1].trim(), type: c[2].trim(), car: c[3].trim(), company: c[4].trim(),
-               item: c[5].trim(), gross: c[6].trim(), tare: c[7].trim(), grossTime: c[8].trim(),
-               tareTime: c[9].trim(), lossRate: c[10].trim(), loss: c[11].trim(), real: c[12].trim(),
-               price: c[13].trim(), amount: c[14].trim(), memo: c[15].trim() };
-    } else {
-      while (c.length < 15) c.push('');
-      return { id: genId(), date: c[0].trim(), type: c[1].trim(), car: c[2].trim(), company: c[3].trim(),
-               item: c[4].trim(), gross: c[5].trim(), tare: c[6].trim(), grossTime: c[7].trim(),
-               tareTime: c[8].trim(), lossRate: c[9].trim(), loss: c[10].trim(), real: c[11].trim(),
-               price: c[12].trim(), amount: c[13].trim(), memo: c[14].trim() };
-    }
-  });
-}
-
-async function writeWeighingCSV(records) {
-  const { Readable } = require('stream');
-  const rows = records.map(r =>
-    [r.id, r.date, r.type, '"'+(r.car||'')+'"', r.company, r.item, r.gross, r.tare,
-     r.grossTime, r.tareTime, r.lossRate, r.loss, r.real, r.price, r.amount, '"'+(r.memo||'')+'"'].join(',')
-  );
-  const stream = Readable.from([CSV_HEADER + '\n' + rows.join('\n')]);
-  await drive.files.update({ fileId: FILE_IDS.records_csv, media: { mimeType: 'text/csv', body: stream } });
-}
-
-// ─── 마이그레이션 + 전체 읽기 (내부용) ──────────────
+// ─── 계량기록 읽기/쓰기 (JSON) ───────────────────────
 async function readWeighingRecords() {
-  let text = await readFile(FILE_IDS.records_csv);
-  var firstLine = text.split(/\r?\n/)[0];
-  var needsMigration = firstLine.trim().split(',')[0].trim() !== 'id';
-  var records = parseWeighingCSV(text);
-  if (needsMigration) {
-    await writeWeighingCSV(records);
-  }
-  return records;
+  const text = await readFile(FILE_IDS.weighing);
+  const data = JSON.parse(text);
+  return data.records || [];
+}
+
+async function writeWeighingRecords(records) {
+  await writeFile(FILE_IDS.weighing, { records });
 }
 
 // ─── 기존: 일정 ──────────────────────────────────────
@@ -160,7 +109,7 @@ app.get('/records/json', async (req, res) => {
   } catch (e) { res.status(500).send(e.toString()); }
 });
 
-// ─── 계량기록 저장 (Queue 적용) ──────────────────────
+// ─── 계량기록 저장 ───────────────────────────────────
 app.post('/weighing/save', (req, res) => {
   weighingQueue(async () => {
     const b = req.body;
@@ -169,17 +118,17 @@ app.post('/weighing/save', (req, res) => {
     records.push({
       id: newId,
       date: b.date||'', type: b.type||'매입', car: b.car||'', company: b.company||'',
-      item: b.item||'', gross: b.gross||0, tare: b.tare||0,
+      item: b.item||'', gross: b.gross||'', tare: b.tare||'',
       grossTime: b.grossTime||'', tareTime: b.tareTime||'',
-      lossRate: b.lossRate||0, loss: b.loss||0, real: b.real||0,
-      price: b.price||0, amount: b.amount||0, memo: b.memo||''
+      lossRate: b.lossRate||'0', loss: b.loss||'', real: b.real||'',
+      price: b.price||'', amount: b.amount||'', memo: b.memo||''
     });
-    await writeWeighingCSV(records);
+    await writeWeighingRecords(records);
     res.json({ ok: true, id: newId });
   }).catch(e => res.status(500).json({ ok: false, error: e.toString() }));
 });
 
-// ─── 계량기록 수정 (Queue 적용) ──────────────────────
+// ─── 계량기록 수정 ───────────────────────────────────
 app.post('/weighing/update', (req, res) => {
   weighingQueue(async () => {
     const b = req.body;
@@ -200,12 +149,12 @@ app.post('/weighing/update', (req, res) => {
       lossRate: b.lossRate, loss: b.loss, real: b.real,
       price: b.price, amount: b.amount, memo: b.memo
     };
-    await writeWeighingCSV(records);
+    await writeWeighingRecords(records);
     res.json({ ok: true });
   }).catch(e => res.status(500).json({ ok: false, error: e.toString() }));
 });
 
-// ─── 계량기록 삭제 (Queue 적용) ──────────────────────
+// ─── 계량기록 삭제 ───────────────────────────────────
 app.post('/weighing/delete', (req, res) => {
   weighingQueue(async () => {
     const { id, date, car, gross, grossTime } = req.body;
@@ -219,7 +168,7 @@ app.post('/weighing/delete', (req, res) => {
     }
     if (idx === -1) return res.status(404).json({ ok: false, error: '기록을 찾을 수 없음' });
     records.splice(idx, 1);
-    await writeWeighingCSV(records);
+    await writeWeighingRecords(records);
     res.json({ ok: true });
   }).catch(e => res.status(500).json({ ok: false, error: e.toString() }));
 });
