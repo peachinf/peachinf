@@ -248,6 +248,7 @@ var now=new Date();
 var body={
 date:document.getElementById('fDate').value,type:document.getElementById('fType').value,
 car:car,company:comp,item:document.getElementById('fItem').value.trim(),
+bizType: _editId ? ((records.find(function(r){return String(r.id)===String(_editId);})||{}).bizType||'') : '',  
 gross:pn(document.getElementById('fGross').value.replace(/,/g,'')),tare:pn(document.getElementById('fTare').value.replace(/,/g,'')),
 grossTime:document.getElementById('fGrossTime').value||hhmm(now),
 tareTime:document.getElementById('fTareTime').value||hhmm(now),
