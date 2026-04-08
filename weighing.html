@@ -43,6 +43,7 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
 .badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;flex-shrink:0}
 .badge-buy{background:var(--blue-lt);color:var(--blue)}
 .badge-sell{background:#fce4ec;color:var(--red)}
+.biz-badge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;flex-shrink:0;margin-right:4px;}
 .rec-car{font-size:12px;color:#bbb;margin-left:6px}
 .rec-date{font-size:11px;color:#bbb;flex-shrink:0}
 .rec-company{font-size:14px;font-weight:900;color:#111;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -68,6 +69,13 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
 <div class="tab" id="tab1" onclick="switchTab(1)">계량기록</div>
 </div>
 
+<!-- bizType 팝업 -->
+<div id="bizPop" style="display:none;position:fixed;background:#fff;border:1px solid #c0cfe0;border-radius:6px;padding:4px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.15);flex-direction:row;gap:4px;">
+  <button onclick="selectBiz('의')" style="padding:6px 14px;font-size:13px;font-weight:700;border-radius:4px;border:1px solid #185FA5;background:#E6F1FB;color:#0C447C;cursor:pointer;">의</button>
+  <button onclick="selectBiz('개')" style="padding:6px 14px;font-size:13px;font-weight:700;border-radius:4px;border:1px solid #3B6D11;background:#EAF3DE;color:#27500A;cursor:pointer;">개</button>
+  <button onclick="selectBiz('법')" style="padding:6px 14px;font-size:13px;font-weight:700;border-radius:4px;border:1px solid #854F0B;background:#FAEEDA;color:#633806;cursor:pointer;">법</button>
+</div>
+
 <div class="page on" id="page0">
 <div class="card" style="margin-top:6px;padding:10px;">
 <table style="width:100%;border-collapse:collapse;">
@@ -80,7 +88,14 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
 </td></tr>
 <tr><td class="fl">계량일자</td><td colspan="2" style="padding:3px 0;"><input type="date" id="fDate" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;"></td></tr>
 <tr><td class="fl">차량번호</td><td colspan="2" style="padding:3px 0;"><input type="text" id="fCar" autocomplete="off" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;"></td></tr>
-<tr><td class="fl">거래처</td><td colspan="2" style="padding:3px 0;"><input type="text" id="fCompany" autocomplete="off" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;"></td></tr>
+<tr><td class="fl">거래처</td><td colspan="2" style="padding:3px 0;">
+  <div style="display:flex;align-items:center;gap:6px;">
+    <button type="button" id="bizBtn" onclick="toggleBizPop(event)" style="width:32px;height:32px;border-radius:4px;border:1px solid #ccc;background:#f5f5f5;color:#aaa;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="8" height="10" rx="1" stroke="#aaa" stroke-width="1.2" fill="none"/><line x1="3" y1="4" x2="7" y2="4" stroke="#aaa" stroke-width="1"/><line x1="3" y1="6" x2="7" y2="6" stroke="#aaa" stroke-width="1"/><line x1="3" y1="8" x2="5.5" y2="8" stroke="#aaa" stroke-width="1"/><circle cx="11" cy="10" r="2.5" fill="#aaa"/><text x="11" y="12" text-anchor="middle" font-size="3.5" fill="white" font-weight="bold">₩</text></svg>
+    </button>
+    <input type="text" id="fCompany" autocomplete="off" style="flex:1;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;">
+  </div>
+</td></tr>
 <tr><td class="fl">품목</td><td colspan="2" style="padding:3px 0;"><input type="text" id="fItem" autocomplete="off" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;"></td></tr>
 <tr>
 <td class="fl">총중량</td>
@@ -136,16 +151,25 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
 var SERVER='https://peachinf-16192067572.europe-west1.run.app';
 var records=[];
 var _editId=null;
+var _bizType='';
+var BIZ_COLOR={'의':{bg:'#E6F1FB',color:'#0C447C',border:'#185FA5'},'개':{bg:'#EAF3DE',color:'#27500A',border:'#3B6D11'},'법':{bg:'#FAEEDA',color:'#633806',border:'#854F0B'}};
 
 function vib(){try{if(window.AndroidShare)window.AndroidShare.vibrate();}catch(e){}}
 
 window.onload=function(){
-var today=todayStr(),now=new Date();
-document.getElementById('fDate').value=today;
-document.getElementById('fGrossTime').value=hhmm(now);
-document.getElementById('sFrom').value=today.slice(0,7)+'-01';
-document.getElementById('sTo').value=today;
-loadRecords();
+  var today=todayStr(),now=new Date();
+  document.getElementById('fDate').value=today;
+  document.getElementById('fGrossTime').value=hhmm(now);
+  document.getElementById('sFrom').value=today.slice(0,7)+'-01';
+  document.getElementById('sTo').value=today;
+  loadRecords();
+  document.addEventListener('click',function(e){
+    var pop=document.getElementById('bizPop');
+    var btn=document.getElementById('bizBtn');
+    if(pop.style.display==='flex'&&!pop.contains(e.target)&&!btn.contains(e.target)){
+      pop.style.display='none';
+    }
+  });
 };
 
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
@@ -154,198 +178,244 @@ function pad(n){return String(n).padStart(2,'0');}
 function pn(s){return parseFloat(String(s||0).replace(/,/g,''))||0;}
 function fmt(v){return v?Number(v).toLocaleString('ko-KR'):'0';}
 
+function toggleBizPop(e){
+  e.stopPropagation();
+  var pop=document.getElementById('bizPop');
+  var rect=e.currentTarget.getBoundingClientRect();
+  if(pop.style.display==='flex'){pop.style.display='none';return;}
+  pop.style.left=rect.left+'px';
+  pop.style.top=(rect.bottom+4)+'px';
+  pop.style.display='flex';
+}
+
+function selectBiz(t){
+  _bizType=_bizType===t?'':t;
+  var btn=document.getElementById('bizBtn');
+  if(_bizType){
+    var s=BIZ_COLOR[_bizType];
+    btn.innerHTML=_bizType;
+    btn.style.background=s.bg;btn.style.color=s.color;btn.style.border='2px solid '+s.border;
+  } else {
+    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="8" height="10" rx="1" stroke="#aaa" stroke-width="1.2" fill="none"/><line x1="3" y1="4" x2="7" y2="4" stroke="#aaa" stroke-width="1"/><line x1="3" y1="6" x2="7" y2="6" stroke="#aaa" stroke-width="1"/><line x1="3" y1="8" x2="5.5" y2="8" stroke="#aaa" stroke-width="1"/><circle cx="11" cy="10" r="2.5" fill="#aaa"/><text x="11" y="12" text-anchor="middle" font-size="3.5" fill="white" font-weight="bold">₩</text></svg>';
+    btn.style.background='#f5f5f5';btn.style.color='#aaa';btn.style.border='1px solid #ccc';
+  }
+  document.getElementById('bizPop').style.display='none';
+}
+
+function resetBiz(){
+  _bizType='';
+  var btn=document.getElementById('bizBtn');
+  btn.innerHTML='<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="8" height="10" rx="1" stroke="#aaa" stroke-width="1.2" fill="none"/><line x1="3" y1="4" x2="7" y2="4" stroke="#aaa" stroke-width="1"/><line x1="3" y1="6" x2="7" y2="6" stroke="#aaa" stroke-width="1"/><line x1="3" y1="8" x2="5.5" y2="8" stroke="#aaa" stroke-width="1"/><circle cx="11" cy="10" r="2.5" fill="#aaa"/><text x="11" y="12" text-anchor="middle" font-size="3.5" fill="white" font-weight="bold">₩</text></svg>';
+  btn.style.background='#f5f5f5';btn.style.color='#aaa';btn.style.border='1px solid #ccc';
+}
+
+function setBiz(t){
+  _bizType=t||'';
+  var btn=document.getElementById('bizBtn');
+  if(_bizType){
+    var s=BIZ_COLOR[_bizType];
+    btn.innerHTML=_bizType;
+    btn.style.background=s.bg;btn.style.color=s.color;btn.style.border='2px solid '+s.border;
+  } else {
+    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="8" height="10" rx="1" stroke="#aaa" stroke-width="1.2" fill="none"/><line x1="3" y1="4" x2="7" y2="4" stroke="#aaa" stroke-width="1"/><line x1="3" y1="6" x2="7" y2="6" stroke="#aaa" stroke-width="1"/><line x1="3" y1="8" x2="5.5" y2="8" stroke="#aaa" stroke-width="1"/><circle cx="11" cy="10" r="2.5" fill="#aaa"/><text x="11" y="12" text-anchor="middle" font-size="3.5" fill="white" font-weight="bold">₩</text></svg>';
+    btn.style.background='#f5f5f5';btn.style.color='#aaa';btn.style.border='1px solid #ccc';
+  }
+}
+
 function switchTab(i){vib();
-[0,1].forEach(function(j){
-document.getElementById('tab'+j).classList.toggle('on',i===j);
-document.getElementById('page'+j).classList.toggle('on',i===j);
-});
-if(i===1) renderList();
+  [0,1].forEach(function(j){
+    document.getElementById('tab'+j).classList.toggle('on',i===j);
+    document.getElementById('page'+j).classList.toggle('on',i===j);
+  });
+  if(i===1) renderList();
 }
 
 var _sync=false;
 function onGrossInput(){
-var el=document.getElementById('fGross');
-var raw=el.value.replace(/,/g,'');
-if(raw&&!isNaN(raw)) el.value=Number(raw).toLocaleString('ko-KR');
-var now=new Date();
-var gt=document.getElementById('fGrossTime');
-if(!gt.value) gt.value=hhmm(now);
-calcAll();
+  var el=document.getElementById('fGross');
+  var raw=el.value.replace(/,/g,'');
+  if(raw&&!isNaN(raw)) el.value=Number(raw).toLocaleString('ko-KR');
+  var now=new Date();
+  var gt=document.getElementById('fGrossTime');
+  if(!gt.value) gt.value=hhmm(now);
+  calcAll();
 }
 function onTareInput(){
-var el=document.getElementById('fTare');
-var raw=el.value.replace(/,/g,'');
-if(raw&&!isNaN(raw)) el.value=Number(raw).toLocaleString('ko-KR');
-var now=new Date();
-var tt=document.getElementById('fTareTime');
-if(!tt.value) tt.value=hhmm(now);
-calcAll();
+  var el=document.getElementById('fTare');
+  var raw=el.value.replace(/,/g,'');
+  if(raw&&!isNaN(raw)) el.value=Number(raw).toLocaleString('ko-KR');
+  var now=new Date();
+  var tt=document.getElementById('fTareTime');
+  if(!tt.value) tt.value=hhmm(now);
+  calcAll();
 }
 function calcAll(){
-var g=pn(document.getElementById('fGross').value.replace(/,/g,''));
-var t=pn(document.getElementById('fTare').value.replace(/,/g,''));
-var l=pn(document.getElementById('fLoss').value);
-var real=Math.max(g-t-l,0);
-var p=pn(document.getElementById('fPrice').value);
-document.getElementById('fReal').value=real?fmt(real):'';
-document.getElementById('fAmount').value=(real&&p)?fmt(real*p):'';
+  var g=pn(document.getElementById('fGross').value.replace(/,/g,''));
+  var t=pn(document.getElementById('fTare').value.replace(/,/g,''));
+  var l=pn(document.getElementById('fLoss').value);
+  var real=Math.max(g-t-l,0);
+  var p=pn(document.getElementById('fPrice').value);
+  document.getElementById('fReal').value=real?fmt(real):'';
+  document.getElementById('fAmount').value=(real&&p)?fmt(real*p):'';
 }
 function onRateInput(){
-if(_sync)return;_sync=true;
-var base=pn(document.getElementById('fGross').value)-pn(document.getElementById('fTare').value);
-var rate=pn(document.getElementById('fLossRate').value);
-if(base>0)document.getElementById('fLoss').value=Math.round(base*rate/100)||'';
-calcAll();_sync=false;
+  if(_sync)return;_sync=true;
+  var base=pn(document.getElementById('fGross').value)-pn(document.getElementById('fTare').value);
+  var rate=pn(document.getElementById('fLossRate').value);
+  if(base>0)document.getElementById('fLoss').value=Math.round(base*rate/100)||'';
+  calcAll();_sync=false;
 }
 function onLossInput(){
-if(_sync)return;_sync=true;
-var base=pn(document.getElementById('fGross').value)-pn(document.getElementById('fTare').value);
-var loss=pn(document.getElementById('fLoss').value);
-if(base>0)document.getElementById('fLossRate').value=Math.round(loss/base*100)||0;
-calcAll();_sync=false;
+  if(_sync)return;_sync=true;
+  var base=pn(document.getElementById('fGross').value)-pn(document.getElementById('fTare').value);
+  var loss=pn(document.getElementById('fLoss').value);
+  if(base>0)document.getElementById('fLossRate').value=Math.round(loss/base*100)||0;
+  calcAll();_sync=false;
 }
 function resetForm(){vib();
-var now=new Date();
-_editId=null;
-document.getElementById('fType').value='매입';
-document.getElementById('fGrossTime').value=hhmm(now);
-document.getElementById('fTareTime').value='';
-['fCar','fCompany','fItem','fMemo'].forEach(function(id){document.getElementById(id).value='';});
-['fGross','fTare','fLossRate','fLoss','fPrice'].forEach(function(id){document.getElementById(id).value='';});
-document.getElementById('fReal').value='';
-document.getElementById('fAmount').value='';
+  var now=new Date();
+  _editId=null;
+  resetBiz();
+  document.getElementById('fType').value='매입';
+  document.getElementById('fGrossTime').value=hhmm(now);
+  document.getElementById('fTareTime').value='';
+  ['fCar','fCompany','fItem','fMemo'].forEach(function(id){document.getElementById(id).value='';});
+  ['fGross','fTare','fLossRate','fLoss','fPrice'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('fReal').value='';
+  document.getElementById('fAmount').value='';
 }
 
 var _lastKw='';
 async function loadRecords(){vib();
-var curKw=document.getElementById('sKw').value;
-if(curKw && curKw===_lastKw){
-document.getElementById('sKw').value='';
-_lastKw='';
-} else {
-_lastKw=curKw;
-}
-document.getElementById('recList').innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
-document.getElementById('syncStatus').textContent='동기화 중...';
-try{
-var res=await fetch(SERVER+'/records/json');
-var json=await res.json();
-records=json.records||[];
-document.getElementById('syncStatus').textContent=records.length+'건 · '+todayStr();
-renderList();
-}catch(e){
-document.getElementById('syncStatus').textContent='연결 실패';
-document.getElementById('recList').innerHTML='<div class="empty">서버 연결 실패</div>';
-toast('서버 연결 실패');
-}
+  var curKw=document.getElementById('sKw').value;
+  if(curKw&&curKw===_lastKw){document.getElementById('sKw').value='';_lastKw='';}
+  else{_lastKw=curKw;}
+  document.getElementById('recList').innerHTML='<div class="loading"><div class="spinner"></div>불러오는 중...</div>';
+  document.getElementById('syncStatus').textContent='동기화 중...';
+  try{
+    var res=await fetch(SERVER+'/records/json');
+    var json=await res.json();
+    records=json.records||[];
+    document.getElementById('syncStatus').textContent=records.length+'건 · '+todayStr();
+    renderList();
+  }catch(e){
+    document.getElementById('syncStatus').textContent='연결 실패';
+    document.getElementById('recList').innerHTML='<div class="empty">서버 연결 실패</div>';
+    toast('서버 연결 실패');
+  }
 }
 
 async function saveRecord(){vib();
-var car=document.getElementById('fCar').value.trim();
-var comp=document.getElementById('fCompany').value.trim();
-if(!car||!comp){toast('차량번호와 거래처를 입력하세요');return;}
-var now=new Date();
-var body={
-date:document.getElementById('fDate').value,type:document.getElementById('fType').value,
-car:car,company:comp,item:document.getElementById('fItem').value.trim(),
-bizType: _editId ? ((records.find(function(r){return String(r.id)===String(_editId);})||{}).bizType||'') : '',  
-gross:pn(document.getElementById('fGross').value.replace(/,/g,'')),tare:pn(document.getElementById('fTare').value.replace(/,/g,'')),
-grossTime:document.getElementById('fGrossTime').value||hhmm(now),
-tareTime:document.getElementById('fTareTime').value||hhmm(now),
-lossRate:pn(document.getElementById('fLossRate').value),loss:pn(document.getElementById('fLoss').value),
-real:pn(document.getElementById('fReal').value.replace(/,/g,'')),
-price:pn(document.getElementById('fPrice').value),
-amount:pn(document.getElementById('fAmount').value.replace(/,/g,'')),
-memo:document.getElementById('fMemo').value.trim(),
-};
-try{
-var url=_editId ? SERVER+'/weighing/update' : SERVER+'/weighing/save';
-if(_editId) body.id=_editId;
-var res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-var json=await res.json();
-if(!json.ok)throw new Error('저장 실패');
-toast(_editId?'수정 완료!':'저장 완료!');
-_editId=null;
-resetForm();await loadRecords();
-}catch(e){toast('저장 실패: '+e.message);}
+  var car=document.getElementById('fCar').value.trim();
+  var comp=document.getElementById('fCompany').value.trim();
+  if(!car||!comp){toast('차량번호와 거래처를 입력하세요');return;}
+  var now=new Date();
+  var body={
+    date:document.getElementById('fDate').value,type:document.getElementById('fType').value,
+    car:car,company:comp,bizType:_bizType,item:document.getElementById('fItem').value.trim(),
+    gross:pn(document.getElementById('fGross').value.replace(/,/g,'')),tare:pn(document.getElementById('fTare').value.replace(/,/g,'')),
+    grossTime:document.getElementById('fGrossTime').value||hhmm(now),
+    tareTime:document.getElementById('fTareTime').value||hhmm(now),
+    lossRate:pn(document.getElementById('fLossRate').value),loss:pn(document.getElementById('fLoss').value),
+    real:pn(document.getElementById('fReal').value.replace(/,/g,'')),
+    price:pn(document.getElementById('fPrice').value),
+    amount:pn(document.getElementById('fAmount').value.replace(/,/g,'')),
+    memo:document.getElementById('fMemo').value.trim(),
+  };
+  try{
+    var url=_editId?SERVER+'/weighing/update':SERVER+'/weighing/save';
+    if(_editId) body.id=_editId;
+    var res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var json=await res.json();
+    if(!json.ok)throw new Error('저장 실패');
+    toast(_editId?'수정 완료!':'저장 완료!');
+    _editId=null;
+    resetForm();await loadRecords();
+  }catch(e){toast('저장 실패: '+e.message);}
 }
 
 function renderList(){
-var from=document.getElementById('sFrom').value;
-var to=document.getElementById('sTo').value;
-var type=document.getElementById('sType').value;
-var kw=(document.getElementById('sKw').value||'').trim().toLowerCase();
-var filtered=records.filter(function(r){
-if(!r.date)return false;
-if(from&&r.date<from)return false;
-if(to&&r.date>to)return false;
-if(type!=='전체'&&r.type!==type)return false;
-if(kw&&![r.car,r.company,r.item,r.memo].join(' ').toLowerCase().includes(kw))return false;
-return true;
-}).sort(function(a,b){return((b.date||'')+(b.id||''))>((a.date||'')+(a.id||''))?1:-1;});
+  var from=document.getElementById('sFrom').value;
+  var to=document.getElementById('sTo').value;
+  var type=document.getElementById('sType').value;
+  var kw=(document.getElementById('sKw').value||'').trim().toLowerCase();
+  var filtered=records.filter(function(r){
+    if(!r.date)return false;
+    if(from&&r.date<from)return false;
+    if(to&&r.date>to)return false;
+    if(type!=='전체'&&r.type!==type)return false;
+    if(kw&&![r.car,r.company,r.item,r.memo].join(' ').toLowerCase().includes(kw))return false;
+    return true;
+  }).sort(function(a,b){return((b.date||'')+(b.id||''))>((a.date||'')+(a.id||''))?1:-1;});
 
-var tR=filtered.reduce(function(s,r){return s+(Number(r.real)||0);},0);
-var tA=filtered.reduce(function(s,r){return s+(Number(r.amount)||0);},0);
-document.getElementById('sumBar').textContent=filtered.length+'건  |  인수량 '+fmt(tR)+' kg  |  금액 '+fmt(tA)+' 원';
+  var tR=filtered.reduce(function(s,r){return s+(Number(r.real)||0);},0);
+  var tA=filtered.reduce(function(s,r){return s+(Number(r.amount)||0);},0);
+  document.getElementById('sumBar').textContent=filtered.length+'건  |  인수량 '+fmt(tR)+' kg  |  금액 '+fmt(tA)+' 원';
 
-if(!filtered.length){document.getElementById('recList').innerHTML='<div class="empty">해당 기간 기록 없음</div>';return;}
+  if(!filtered.length){document.getElementById('recList').innerHTML='<div class="empty">해당 기간 기록 없음</div>';return;}
 
-document.getElementById('recList').innerHTML=filtered.map(function(r){
-var isSell=r.type==='매출';
-var mid=[r.item,fmt(r.real),fmt(r.price)].filter(Boolean).join(' · ');
-return '<div class="rec'+(isSell?' sell':'')+'" onclick="loadToForm(\''+r.id+'\')" oncontextmenu="return false;" ontouchstart="startHold(\''+r.id+'\')" ontouchend="cancelHold()" ontouchmove="cancelHold()">'+
-'<div class="rec-row1">'+
-'<div style="display:flex;align-items:center;">'+
-'<span class="badge '+(isSell?'badge-sell':'badge-buy')+'">'+r.type+'</span>'+
-'<span class="rec-car">'+(r.car||'')+'</span>'+
-'</div>'+
-'<span class="rec-date">'+(r.date||'')+'</span>'+
-'</div>'+
-'<div class="rec-row2">'+
-'<span class="rec-company">'+(r.company||'')+'</span>'+
-'<span class="rec-middle">'+mid+'</span>'+
-'<span class="rec-amount">'+fmt(r.amount)+'</span>'+
-'</div>'+
-'</div>';
-}).join('');
+  document.getElementById('recList').innerHTML=filtered.map(function(r){
+    var isSell=r.type==='매출';
+    var mid=[r.item,fmt(r.real),fmt(r.price)].filter(Boolean).join(' · ');
+    var bizHtml='';
+    if(r.bizType&&BIZ_COLOR[r.bizType]){
+      var s=BIZ_COLOR[r.bizType];
+      bizHtml='<span class="biz-badge" style="background:'+s.bg+';color:'+s.color+';border:1px solid '+s.border+'">'+r.bizType+'</span>';
+    }
+    return '<div class="rec'+(isSell?' sell':'')+'" onclick="loadToForm(\''+r.id+'\')" oncontextmenu="return false;" ontouchstart="startHold(\''+r.id+'\')" ontouchend="cancelHold()" ontouchmove="cancelHold()">'+
+      '<div class="rec-row1">'+
+      '<div style="display:flex;align-items:center;">'+
+      '<span class="badge '+(isSell?'badge-sell':'badge-buy')+'">'+r.type+'</span>'+
+      '<span class="rec-car">'+(r.car||'')+'</span>'+
+      '</div>'+
+      '<span class="rec-date">'+(r.date||'')+'</span>'+
+      '</div>'+
+      '<div class="rec-row2">'+
+      '<div style="display:flex;align-items:center;flex:1;min-width:0;">'+
+      bizHtml+
+      '<span class="rec-company">'+(r.company||'')+'</span>'+
+      '</div>'+
+      '<span class="rec-middle">'+mid+'</span>'+
+      '<span class="rec-amount">'+fmt(r.amount)+'</span>'+
+      '</div>'+
+      '</div>';
+  }).join('');
 }
 
 var _holdTimer=null;
 function startHold(id){
-_holdTimer=setTimeout(function(){
-_holdTimer=null;
-var r=records.find(function(x){return String(x.id)===String(id);});
-if(!r)return;
-if(!confirm('이 기록을 삭제할까요?'))return;
-fetch(SERVER+'/weighing/delete',{
-method:'POST',headers:{'Content-Type':'application/json'},
-body:JSON.stringify({id:r.id, date:r.date, car:r.car, gross:r.gross, grossTime:r.grossTime})
-}).then(function(res){return res.json();}).then(function(json){
-if(json.ok){toast('삭제됨');loadRecords();}
-else toast('삭제 실패');
-}).catch(function(){toast('삭제 실패');});
-},700);
+  _holdTimer=setTimeout(function(){
+    _holdTimer=null;
+    var r=records.find(function(x){return String(x.id)===String(id);});
+    if(!r)return;
+    if(!confirm('이 기록을 삭제할까요?'))return;
+    fetch(SERVER+'/weighing/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:r.id,date:r.date,car:r.car,gross:r.gross,grossTime:r.grossTime})})
+    .then(function(res){return res.json();}).then(function(json){
+      if(json.ok){toast('삭제됨');loadRecords();}else toast('삭제 실패');
+    }).catch(function(){toast('삭제 실패');});
+  },700);
 }
 function cancelHold(){clearTimeout(_holdTimer);_holdTimer=null;}
 
 function loadToForm(id){vib();
-var r=records.find(function(x){return String(x.id)===String(id);});
-if(!r)return;
-_editId=r.id||null;
-document.getElementById('fType').value=r.type||'매입';
-document.getElementById('fDate').value=r.date||'';
-document.getElementById('fCar').value=r.car||'';
-document.getElementById('fCompany').value=r.company||'';
-document.getElementById('fItem').value=r.item||'';
-document.getElementById('fGross').value=r.gross?fmt(r.gross):'';
-document.getElementById('fTare').value=r.tare?fmt(r.tare):'';
-document.getElementById('fGrossTime').value=r.grossTime||'';
-document.getElementById('fTareTime').value=r.tareTime||'';
-document.getElementById('fLossRate').value=r.lossRate||0;
-document.getElementById('fLoss').value=r.loss||'';
-document.getElementById('fPrice').value=r.price||'';
-document.getElementById('fMemo').value=r.memo||'';
-calcAll();switchTab(0);window.scrollTo(0,0);toast('기록 불러옴');
+  var r=records.find(function(x){return String(x.id)===String(id);});
+  if(!r)return;
+  _editId=r.id||null;
+  setBiz(r.bizType||'');
+  document.getElementById('fType').value=r.type||'매입';
+  document.getElementById('fDate').value=r.date||'';
+  document.getElementById('fCar').value=r.car||'';
+  document.getElementById('fCompany').value=r.company||'';
+  document.getElementById('fItem').value=r.item||'';
+  document.getElementById('fGross').value=r.gross?fmt(r.gross):'';
+  document.getElementById('fTare').value=r.tare?fmt(r.tare):'';
+  document.getElementById('fGrossTime').value=r.grossTime||'';
+  document.getElementById('fTareTime').value=r.tareTime||'';
+  document.getElementById('fLossRate').value=r.lossRate||0;
+  document.getElementById('fLoss').value=r.loss||'';
+  document.getElementById('fPrice').value=r.price||'';
+  document.getElementById('fMemo').value=r.memo||'';
+  calcAll();switchTab(0);window.scrollTo(0,0);toast('기록 불러옴');
 }
 
 function mkCanvas(w,h){var cv=document.createElement('canvas');cv.width=w;cv.height=h;return cv;}
@@ -364,258 +434,113 @@ function genCertImg(){vib();
   var price=pn(document.getElementById('fPrice').value);
   var amount=pn(document.getElementById('fAmount').value.replace(/,/g,''));
   var memo=document.getElementById('fMemo').value.trim();
-
-  // ── 크기 설정
-  var W   = 1000;   // 캔버스 전체 너비
-  var LW  = 280;    // 라벨 열 너비
-  var TW  = 170;    // 시간 열 너비
-  var ROW = 120;    // 행 높이
-  var PAD = 55;     // 숫자 오른쪽 여백 (클수록 왼쪽으로)
-
+  var W=1000,LW=280,TW=170,ROW=120,PAD=55;
   var ROWS=[
-    {lbl:'일     자',  val:date,        center:true,  hasTime:false},
-    {lbl:'차량번호',   val:car,         center:true,  hasTime:false},
-    {lbl:'거 래 처',  val:company,     center:true,  hasTime:false},
-    {lbl:'품     명',  val:item,        center:true,  hasTime:false},
-    {lbl:'총 중 량',  val:fmt(gross),  center:false, hasTime:true, time:grossTime},
-    {lbl:'공     차',  val:fmt(tare),   center:false, hasTime:true, time:tareTime},
-    {lbl:'감     량',  val:fmt(loss),   center:false, hasTime:false},
-    {lbl:'인 수 량',  val:fmt(real),   center:false, hasTime:false},
-    {lbl:'단     가',  val:fmt(price),  center:false, hasTime:false},
-    {lbl:'금     액',  val:fmt(amount), center:false, hasTime:false, isAmt:true},
-    {lbl:'비     고',  val:memo||'',    center:false, hasTime:false},
+    {lbl:'일     자',val:date,center:true,hasTime:false},
+    {lbl:'차량번호',val:car,center:true,hasTime:false},
+    {lbl:'거 래 처',val:company,center:true,hasTime:false},
+    {lbl:'품     명',val:item,center:true,hasTime:false},
+    {lbl:'총 중 량',val:fmt(gross),center:false,hasTime:true,time:grossTime},
+    {lbl:'공     차',val:fmt(tare),center:false,hasTime:true,time:tareTime},
+    {lbl:'감     량',val:fmt(loss),center:false,hasTime:false},
+    {lbl:'인 수 량',val:fmt(real),center:false,hasTime:false},
+    {lbl:'단     가',val:fmt(price),center:false,hasTime:false},
+    {lbl:'금     액',val:fmt(amount),center:false,hasTime:false,isAmt:true},
+    {lbl:'비     고',val:memo||'',center:false,hasTime:false},
   ];
-
-  var HDR=160, SUB=46, TY=HDR+SUB;
-  var TABLE_H=ROWS.length*ROW;
-  var FTR=250;
-  var H=TY+TABLE_H+FTR;
-
-  var cv=mkCanvas(W,H), cx=cv.getContext('2d');
-  cx.fillStyle='#fff'; cx.fillRect(0,0,W,H);
-
-  // ── 헤더
-  cx.fillStyle='#5a7ab5'; cx.fillRect(0,0,W,HDR);
-  cx.fillStyle='#fff';
-  cx.font='bold 78px sans-serif';
-  cx.textAlign='center';
-  cx.fillText('계  량  증  명  서', W/2, 115);
-
-  // ── 공급자 보관용
-  cx.fillStyle='#f2f5fb'; cx.fillRect(0,HDR,W,SUB);
-  cx.strokeStyle='#c0cce0'; cx.lineWidth=1;
-  cx.beginPath(); cx.moveTo(0,HDR); cx.lineTo(W,HDR); cx.stroke();
-  cx.beginPath(); cx.moveTo(0,HDR+SUB); cx.lineTo(W,HDR+SUB); cx.stroke();
-  cx.fillStyle='#888'; cx.font='20px sans-serif'; cx.textAlign='right';
-  cx.fillText('(공급자 보관용)', W-20, HDR+SUB/2+8);
-
-  // ── 표 외곽
-  cx.strokeStyle='#8090b0'; cx.lineWidth=2;
-  cx.strokeRect(0,TY,W,TABLE_H);
-
-  // ── 행 그리기
+  var HDR=160,SUB=46,TY=HDR+SUB,TABLE_H=ROWS.length*ROW,FTR=250,H=TY+TABLE_H+FTR;
+  var cv=mkCanvas(W,H),cx=cv.getContext('2d');
+  cx.fillStyle='#fff';cx.fillRect(0,0,W,H);
+  cx.fillStyle='#5a7ab5';cx.fillRect(0,0,W,HDR);
+  cx.fillStyle='#fff';cx.font='bold 78px sans-serif';cx.textAlign='center';cx.fillText('계  량  증  명  서',W/2,115);
+  cx.fillStyle='#f2f5fb';cx.fillRect(0,HDR,W,SUB);
+  cx.strokeStyle='#c0cce0';cx.lineWidth=1;cx.beginPath();cx.moveTo(0,HDR);cx.lineTo(W,HDR);cx.stroke();
+  cx.beginPath();cx.moveTo(0,HDR+SUB);cx.lineTo(W,HDR+SUB);cx.stroke();
+  cx.fillStyle='#888';cx.font='20px sans-serif';cx.textAlign='right';cx.fillText('(공급자 보관용)',W-20,HDR+SUB/2+8);
+  cx.strokeStyle='#8090b0';cx.lineWidth=2;cx.strokeRect(0,TY,W,TABLE_H);
   ROWS.forEach(function(r,i){
-    var y=TY+i*ROW;
-    var mid=y+ROW/2;
-
-    // 배경
-    cx.fillStyle='#dce5f5'; cx.fillRect(0,y,LW,ROW);
-    cx.fillStyle='#fff';    cx.fillRect(LW,y,W-LW,ROW);
-
-    // 행 구분선
-    cx.strokeStyle='#b0bfd8'; cx.lineWidth=1;
-    cx.beginPath(); cx.moveTo(0,y+ROW); cx.lineTo(W,y+ROW); cx.stroke();
-
-    // 라벨/값 세로선
-    cx.beginPath(); cx.moveTo(LW,y); cx.lineTo(LW,y+ROW); cx.stroke();
-
-    // 시간 칸
-    if(r.hasTime){
-      cx.beginPath(); cx.moveTo(LW+TW,y); cx.lineTo(LW+TW,y+ROW); cx.stroke();
-      cx.fillStyle='#333'; cx.font='40px sans-serif'; cx.textAlign='center';
-      cx.fillText(r.time||'', LW+TW/2, mid+15);
-    }
-
-    // 라벨
-    cx.fillStyle='#1a2e5a'; cx.font='bold 44px sans-serif'; cx.textAlign='center';
-    cx.fillText(r.lbl, LW/2, mid+16);
-
-    // 값 영역
-    var vx = r.hasTime ? (LW+TW) : LW;
-    var vw = W - vx;
-
-    cx.fillStyle = r.isAmt ? '#c0392b' : '#111';
-
-    if(r.center){
-      cx.font = '48px sans-serif';
-      cx.textAlign='center';
-      cx.fillText(r.val, vx+vw/2, mid+17);
-    } else {
-      cx.font = r.isAmt ? 'bold 66px sans-serif' : '50px sans-serif';
-      cx.textAlign='right';
-      cx.fillText(r.val, W-PAD, mid+18);
-    }
+    var y=TY+i*ROW,mid=y+ROW/2;
+    cx.fillStyle='#dce5f5';cx.fillRect(0,y,LW,ROW);
+    cx.fillStyle='#fff';cx.fillRect(LW,y,W-LW,ROW);
+    cx.strokeStyle='#b0bfd8';cx.lineWidth=1;cx.beginPath();cx.moveTo(0,y+ROW);cx.lineTo(W,y+ROW);cx.stroke();
+    cx.beginPath();cx.moveTo(LW,y);cx.lineTo(LW,y+ROW);cx.stroke();
+    if(r.hasTime){cx.beginPath();cx.moveTo(LW+TW,y);cx.lineTo(LW+TW,y+ROW);cx.stroke();cx.fillStyle='#333';cx.font='40px sans-serif';cx.textAlign='center';cx.fillText(r.time||'',LW+TW/2,mid+15);}
+    cx.fillStyle='#1a2e5a';cx.font='bold 44px sans-serif';cx.textAlign='center';cx.fillText(r.lbl,LW/2,mid+16);
+    var vx=r.hasTime?(LW+TW):LW,vw=W-vx;
+    cx.fillStyle=r.isAmt?'#c0392b':'#111';
+    if(r.center){cx.font='48px sans-serif';cx.textAlign='center';cx.fillText(r.val,vx+vw/2,mid+17);}
+    else{cx.font=r.isAmt?'bold 66px sans-serif':'50px sans-serif';cx.textAlign='right';cx.fillText(r.val,W-PAD,mid+18);}
   });
-
-  // ── 하단 푸터
   var BY=TY+TABLE_H;
-  cx.fillStyle='#f2f5fb'; cx.fillRect(0,BY,W,FTR);
-  cx.strokeStyle='#8090b0'; cx.lineWidth=2;
-  cx.beginPath(); cx.moveTo(0,BY); cx.lineTo(W,BY); cx.stroke();
-  cx.strokeRect(0,BY,W,FTR);
-
-  // 회사명
-  cx.fillStyle='#1a2e5a'; cx.font='bold 46px sans-serif'; cx.textAlign='center';
-  cx.fillText('대성자원(재달)', W/2, BY+68);
-
-  // 구분선
-  cx.strokeStyle='#b0bfd8'; cx.lineWidth=1;
-  cx.beginPath(); cx.moveTo(60,BY+86); cx.lineTo(W-60,BY+86); cx.stroke();
-
-  // 주소·연락처·안내문 - 블록 가운데, 줄 왼쪽 정렬
-  cx.font='26px sans-serif'; cx.fillStyle='#333';
-  var lines=[
-    {t:'주소 : 전남 순천시 주암면 광천리 215', f:'26px sans-serif', c:'#333'},
-    {t:'HP : 010-5773-1520    Fax : 0504-428-1520', f:'26px sans-serif', c:'#333'},
-    {t:'필히 재확인 하십시오. ( 단위 : kg , 단가 : 원/kg )', f:'22px sans-serif', c:'#888'},
-    {t:'확인 후 중량의 변동에 대한 책임은 본 업소에는 없습니다.', f:'22px sans-serif', c:'#888'},
-  ];
-  var maxW=0;
-  lines.forEach(function(l){cx.font=l.f; var w=cx.measureText(l.t).width; if(w>maxW)maxW=w;});
-  var bx=Math.round((W-maxW)/2);
-  var ys=[BY+120, BY+158, BY+196, BY+230];
-  lines.forEach(function(l,i){cx.font=l.f; cx.fillStyle=l.c; cx.textAlign='left'; cx.fillText(l.t,bx,ys[i]);});
-
+  cx.fillStyle='#f2f5fb';cx.fillRect(0,BY,W,FTR);cx.strokeStyle='#8090b0';cx.lineWidth=2;cx.beginPath();cx.moveTo(0,BY);cx.lineTo(W,BY);cx.stroke();cx.strokeRect(0,BY,W,FTR);
+  cx.fillStyle='#1a2e5a';cx.font='bold 46px sans-serif';cx.textAlign='center';cx.fillText('대성자원(재달)',W/2,BY+68);
+  cx.strokeStyle='#b0bfd8';cx.lineWidth=1;cx.beginPath();cx.moveTo(60,BY+86);cx.lineTo(W-60,BY+86);cx.stroke();
+  var lines=[{t:'주소 : 전남 순천시 주암면 광천리 215',f:'26px sans-serif',c:'#333'},{t:'HP : 010-5773-1520    Fax : 0504-428-1520',f:'26px sans-serif',c:'#333'},{t:'필히 재확인 하십시오. ( 단위 : kg , 단가 : 원/kg )',f:'22px sans-serif',c:'#888'},{t:'확인 후 중량의 변동에 대한 책임은 본 업소에는 없습니다.',f:'22px sans-serif',c:'#888'}];
+  var maxW=0;lines.forEach(function(l){cx.font=l.f;var w=cx.measureText(l.t).width;if(w>maxW)maxW=w;});
+  var bx=Math.round((W-maxW)/2),ys=[BY+120,BY+158,BY+196,BY+230];
+  lines.forEach(function(l,i){cx.font=l.f;cx.fillStyle=l.c;cx.textAlign='left';cx.fillText(l.t,bx,ys[i]);});
   shareImg(cv,'계근표_'+car+'_'+date+'.jpg');
 }
 
 function genBuyImg(){vib();
-var from=document.getElementById('sFrom').value||todayStr().slice(0,7)+'-01';
-var to=document.getElementById('sTo').value||todayStr();
-var company=document.getElementById('fCompany').value.trim();
-var target=records.filter(function(r){
-return r.type==='매입'&&(!from||r.date>=from)&&(!to||r.date<=to)&&(!company||(r.company||'').indexOf(company)>=0||(r.item||'').indexOf(company)>=0||(r.car||'').indexOf(company)>=0);
-}).sort(function(a,b){return a.date>b.date?1:-1;});
-if(!target.length){toast('매입 기록 없음');return;}
-
-// 세로 캔버스에 90도 회전 → Android에서 가로방향으로 보임
-var CW=877, CH=1240; // 캔버스는 세로
-var W=CH, H=CW;      // 실제 그리는 크기는 가로
-
-var PAD=40;
-
-var COLS=[
-{h:'일자',     w:140,key:'date',   align:'center'},
-{h:'차량번호', w:100,key:'car',    align:'center'},
-{h:'거래처',   w:160,key:'company',align:'center'},
-{h:'품목',     w:130,key:'item',   align:'center'},
-{h:'총중량',   w:100,key:'gross',  align:'right',num:true},
-{h:'공차',     w:90, key:'tare',   align:'right',num:true},
-{h:'감량',     w:80, key:'loss',   align:'right',num:true},
-{h:'인수량',   w:100,key:'real',   align:'right',num:true},
-{h:'단가',     w:80, key:'price',  align:'right',num:true},
-{h:'금액',     w:120,key:'amount', align:'right',num:true},
-{h:'비고',     w:120,key:'memo',   align:'left'},
-];
-
-var totalW=COLS.reduce(function(s,c){return s+c.w;},0);
-var scale=(W-PAD*2)/totalW;
-COLS.forEach(function(c){c.w=Math.round(c.w*scale);});
-
-var HDR=70, INFO=30, CHDR=44, ROW=50;
-var minH=HDR+INFO+CHDR+(target.length+1)*ROW+40;
-if(H<minH) H=minH;
-
-// 세로 캔버스 생성, 내용은 가로로 회전해서 그림
-var cv=mkCanvas(CW, Math.max(CH, H)), cx=cv.getContext('2d');
-cx.fillStyle='#fff'; cx.fillRect(0,0,CW,cv.height);
-
-cx.save();
-cx.translate(CW, 0);
-cx.rotate(Math.PI/2);
-
-cx.fillStyle='#fff'; cx.fillRect(0,0,W,H);
-
-// 열 X 좌표
-var xs=[PAD];
-COLS.forEach(function(c){xs.push(xs[xs.length-1]+c.w);});
-var tableRight=xs[xs.length-1];
-
-// 헤더 - 표 너비만큼만
-cx.fillStyle='#4A6FA5';cx.fillRect(PAD,0,tableRight-PAD,HDR);
-cx.fillStyle='#fff';cx.font='bold 40px sans-serif';cx.textAlign='center';
-cx.fillText('매  입  명  세  서',(PAD+tableRight)/2,HDR/2+15);
-
-// 출력일자
-cx.fillStyle='#f5f5f5';cx.fillRect(PAD,HDR,tableRight-PAD,INFO);
-cx.strokeStyle='#ccd4e8';cx.lineWidth=1;cx.strokeRect(PAD,HDR,tableRight-PAD,INFO);
-cx.fillStyle='#333';cx.font='16px sans-serif';cx.textAlign='right';
-var now=new Date();
-cx.fillText('출력일자: '+now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'  '+pad(now.getHours())+':'+pad(now.getMinutes()),tableRight-6,HDR+INFO/2+6);
-
-var y=HDR+INFO;
-
-// 컬럼 헤더
-cx.fillStyle='#dde5f5';cx.fillRect(PAD,y,tableRight-PAD,CHDR);
-cx.strokeStyle='#8090b0';cx.lineWidth=1.5;cx.strokeRect(PAD,y,tableRight-PAD,CHDR);
-cx.fillStyle='#1a2e5a';cx.font='bold 20px sans-serif';
-COLS.forEach(function(c,i){
-  cx.textAlign='center';cx.fillText(c.h,xs[i]+c.w/2,y+CHDR/2+7);
-  cx.strokeStyle='#8090b0';cx.lineWidth=1;
-  cx.beginPath();cx.moveTo(xs[i],y);cx.lineTo(xs[i],y+CHDR);cx.stroke();
-});
-y+=CHDR;
-
-// 데이터 행
-var totR=0,totA=0;
-target.forEach(function(r,ri){
-  cx.fillStyle='#fff';cx.fillRect(PAD,y,tableRight-PAD,ROW);
-  cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;cx.strokeRect(PAD,y,tableRight-PAD,ROW);
-  COLS.forEach(function(_,i){
-    cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;
-    cx.beginPath();cx.moveTo(xs[i],y);cx.lineTo(xs[i],y+ROW);cx.stroke();
+  var from=document.getElementById('sFrom').value||todayStr().slice(0,7)+'-01';
+  var to=document.getElementById('sTo').value||todayStr();
+  var company=document.getElementById('fCompany').value.trim();
+  var target=records.filter(function(r){
+    return r.type==='매입'&&(!from||r.date>=from)&&(!to||r.date<=to)&&(!company||(r.company||'').indexOf(company)>=0||(r.item||'').indexOf(company)>=0||(r.car||'').indexOf(company)>=0);
+  }).sort(function(a,b){return a.date>b.date?1:-1;});
+  if(!target.length){toast('매입 기록 없음');return;}
+  var CW=877,CH=1240,W=CH,H=CW,PAD=40;
+  var COLS=[{h:'일자',w:140,key:'date',align:'center'},{h:'차량번호',w:100,key:'car',align:'center'},{h:'거래처',w:160,key:'company',align:'center'},{h:'품목',w:130,key:'item',align:'center'},{h:'총중량',w:100,key:'gross',align:'right',num:true},{h:'공차',w:90,key:'tare',align:'right',num:true},{h:'감량',w:80,key:'loss',align:'right',num:true},{h:'인수량',w:100,key:'real',align:'right',num:true},{h:'단가',w:80,key:'price',align:'right',num:true},{h:'금액',w:120,key:'amount',align:'right',num:true},{h:'비고',w:120,key:'memo',align:'left'}];
+  var totalW=COLS.reduce(function(s,c){return s+c.w;},0);
+  var scale=(W-PAD*2)/totalW;COLS.forEach(function(c){c.w=Math.round(c.w*scale);});
+  var HDR=70,INFO=30,CHDR=44,ROW=50,minH=HDR+INFO+CHDR+(target.length+1)*ROW+40;
+  if(H<minH)H=minH;
+  var cv=mkCanvas(CW,Math.max(CH,H)),cx=cv.getContext('2d');
+  cx.fillStyle='#fff';cx.fillRect(0,0,CW,cv.height);
+  cx.save();cx.translate(CW,0);cx.rotate(Math.PI/2);
+  cx.fillStyle='#fff';cx.fillRect(0,0,W,H);
+  var xs=[PAD];COLS.forEach(function(c){xs.push(xs[xs.length-1]+c.w);});
+  var tableRight=xs[xs.length-1];
+  cx.fillStyle='#4A6FA5';cx.fillRect(PAD,0,tableRight-PAD,HDR);cx.fillStyle='#fff';cx.font='bold 40px sans-serif';cx.textAlign='center';cx.fillText('매  입  명  세  서',(PAD+tableRight)/2,HDR/2+15);
+  cx.fillStyle='#f5f5f5';cx.fillRect(PAD,HDR,tableRight-PAD,INFO);cx.strokeStyle='#ccd4e8';cx.lineWidth=1;cx.strokeRect(PAD,HDR,tableRight-PAD,INFO);cx.fillStyle='#333';cx.font='16px sans-serif';cx.textAlign='right';
+  var now=new Date();cx.fillText('출력일자: '+now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'  '+pad(now.getHours())+':'+pad(now.getMinutes()),tableRight-6,HDR+INFO/2+6);
+  var y=HDR+INFO;
+  cx.fillStyle='#dde5f5';cx.fillRect(PAD,y,tableRight-PAD,CHDR);cx.strokeStyle='#8090b0';cx.lineWidth=1.5;cx.strokeRect(PAD,y,tableRight-PAD,CHDR);cx.fillStyle='#1a2e5a';cx.font='bold 20px sans-serif';
+  COLS.forEach(function(c,i){cx.textAlign='center';cx.fillText(c.h,xs[i]+c.w/2,y+CHDR/2+7);cx.strokeStyle='#8090b0';cx.lineWidth=1;cx.beginPath();cx.moveTo(xs[i],y);cx.lineTo(xs[i],y+CHDR);cx.stroke();});
+  y+=CHDR;
+  var totR=0,totA=0;
+  target.forEach(function(r){
+    cx.fillStyle='#fff';cx.fillRect(PAD,y,tableRight-PAD,ROW);cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;cx.strokeRect(PAD,y,tableRight-PAD,ROW);
+    COLS.forEach(function(_,i){cx.strokeStyle='#ccd4e8';cx.lineWidth=0.8;cx.beginPath();cx.moveTo(xs[i],y);cx.lineTo(xs[i],y+ROW);cx.stroke();});
+    cx.fillStyle='#1a1a2e';cx.font='20px sans-serif';
+    COLS.forEach(function(c,i){
+      var val=c.num?fmt(r[c.key]):(r[c.key]||'');
+      var maxW=c.w-8,fs=20;cx.font=fs+'px sans-serif';
+      while(cx.measureText(val).width>maxW&&fs>10){fs--;cx.font=fs+'px sans-serif';}
+      cx.textAlign=c.align;
+      var tx=c.align==='right'?xs[i]+c.w-4:c.align==='center'?xs[i]+c.w/2:xs[i]+4;
+      cx.fillText(val,tx,y+ROW/2+7);
+    });
+    totR+=Number(r.real)||0;totA+=Number(r.amount)||0;y+=ROW;
   });
-  cx.fillStyle='#1a1a2e';cx.font='20px sans-serif';
-  COLS.forEach(function(c,i){
-    var val=c.num?fmt(r[c.key]):(r[c.key]||'');
-    // 박스 너비에 맞게 폰트 자동 축소
-    var maxW=c.w-8;
-    var fs=20;
-    cx.font=fs+'px sans-serif';
-    while(cx.measureText(val).width>maxW&&fs>10){fs--;cx.font=fs+'px sans-serif';}
-    cx.textAlign=c.align;
-    var tx=c.align==='right'?xs[i]+c.w-4:c.align==='center'?xs[i]+c.w/2:xs[i]+4;
-    cx.fillText(val,tx,y+ROW/2+7);
-  });
-  totR+=Number(r.real)||0;totA+=Number(r.amount)||0;y+=ROW;
-});
-
-// 합계 행
-cx.fillStyle='#f5f5f5';cx.fillRect(PAD,y,tableRight-PAD,ROW);
-cx.strokeStyle='#8090b0';cx.lineWidth=1.5;
-cx.beginPath();cx.moveTo(PAD,y);cx.lineTo(tableRight,y);cx.stroke();
-cx.beginPath();cx.moveTo(PAD,y+ROW);cx.lineTo(tableRight,y+ROW);cx.stroke();
-cx.fillStyle='#1a2e5a';cx.font='bold 20px sans-serif';
-cx.textAlign='center';cx.fillText('합  계',xs[0]+COLS[0].w/2,y+ROW/2+7);
-cx.textAlign='right';
-cx.fillText(fmt(totR),xs[7]+COLS[7].w-4,y+ROW/2+7);
-cx.fillText(fmt(totA),xs[9]+COLS[9].w-4,y+ROW/2+7);
-
-cx.restore();
-shareImg(cv,'매입명세서_'+from+'_'+to+'.jpg');
+  cx.fillStyle='#f5f5f5';cx.fillRect(PAD,y,tableRight-PAD,ROW);cx.strokeStyle='#8090b0';cx.lineWidth=1.5;cx.beginPath();cx.moveTo(PAD,y);cx.lineTo(tableRight,y);cx.stroke();cx.beginPath();cx.moveTo(PAD,y+ROW);cx.lineTo(tableRight,y+ROW);cx.stroke();
+  cx.fillStyle='#1a2e5a';cx.font='bold 20px sans-serif';cx.textAlign='center';cx.fillText('합  계',xs[0]+COLS[0].w/2,y+ROW/2+7);cx.textAlign='right';cx.fillText(fmt(totR),xs[7]+COLS[7].w-4,y+ROW/2+7);cx.fillText(fmt(totA),xs[9]+COLS[9].w-4,y+ROW/2+7);
+  cx.restore();
+  shareImg(cv,'매입명세서_'+from+'_'+to+'.jpg');
 }
 
 function shareImg(canvas,filename){
-var base64=canvas.toDataURL('image/jpeg',0.95);
-if(window.AndroidShare){window.AndroidShare.shareImage(base64,filename);}
-else{var a=document.createElement('a');a.href=base64;a.download=filename;a.click();}
+  var base64=canvas.toDataURL('image/jpeg',0.95);
+  if(window.AndroidShare){window.AndroidShare.shareImage(base64,filename);}
+  else{var a=document.createElement('a');a.href=base64;a.download=filename;a.click();}
 }
 
 var _tt;
 function toast(msg){
-var el=document.getElementById('toast');
-el.textContent=msg;el.classList.add('on');
-clearTimeout(_tt);_tt=setTimeout(function(){el.classList.remove('on');},2500);
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('on');
+  clearTimeout(_tt);_tt=setTimeout(function(){el.classList.remove('on');},2500);
 }
 </script>
 </body>
