@@ -163,6 +163,7 @@ app.post('/weighing/save', (req, res) => {
     records.push({
       id: newId,
       date: b.date||'', type: b.type||'매입', car: b.car||'', company: b.company||'',
+      bizType: b.bizType||'',
       item: b.item||'', gross: b.gross||'', tare: b.tare||'',
       grossTime: b.grossTime||'', tareTime: b.tareTime||'',
       lossRate: b.lossRate||'0', loss: b.loss||'', real: b.real||'',
@@ -189,6 +190,7 @@ app.post('/weighing/update', (req, res) => {
     records[idx] = {
       id: records[idx].id,
       date: b.date, type: b.type, car: b.car, company: b.company,
+      bizType: b.bizType||'',
       item: b.item, gross: b.gross, tare: b.tare,
       grossTime: b.grossTime, tareTime: b.tareTime,
       lossRate: b.lossRate, loss: b.loss, real: b.real,
