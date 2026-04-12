@@ -468,8 +468,8 @@ function genCertImg(){vib();
     cx.fillStyle='#1a2e5a';cx.font='bold 44px sans-serif';cx.textAlign='center';cx.fillText(r.lbl,LW/2,mid+16);
     var vx=r.hasTime?(LW+TW):LW,vw=W-vx;
     cx.fillStyle=r.isAmt?'#c0392b':'#111';
-    if(r.center){cx.font='48px sans-serif';cx.textAlign='center';cx.fillText(r.val,vx+vw/2,mid+17);}
-    else{cx.font=r.isAmt?'bold 66px sans-serif':'50px sans-serif';cx.textAlign='right';cx.fillText(r.val,W-PAD,mid+18);}
+    if(r.center){var fs=48,maxW=vw-10;cx.font=fs+'px sans-serif';while(cx.measureText(r.val).width>maxW&&fs>20){fs--;cx.font=fs+'px sans-serif';}cx.textAlign='center';cx.fillText(r.val,vx+vw/2,mid+17);}
+    else{var fs2=r.isAmt?66:50,maxW2=vw-PAD-10;cx.font=(r.isAmt?'bold ':'')+fs2+'px sans-serif';while(cx.measureText(r.val).width>maxW2&&fs2>20){fs2--;cx.font=(r.isAmt?'bold ':'')+fs2+'px sans-serif';}cx.textAlign='right';cx.fillText(r.val,W-PAD,mid+18);}
   });
   var BY=TY+TABLE_H;
   cx.fillStyle='#f2f5fb';cx.fillRect(0,BY,W,FTR);cx.strokeStyle='#8090b0';cx.lineWidth=2;cx.beginPath();cx.moveTo(0,BY);cx.lineTo(W,BY);cx.stroke();cx.strokeRect(0,BY,W,FTR);
