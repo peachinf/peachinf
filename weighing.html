@@ -490,7 +490,7 @@ function genCertImg(){vib();
         cx.fillStyle='#c0392b';cx.textAlign='right';cx.fillText(r.val||r,W-PAD,mid+17);
       } else {
         var fs=fsBase,mw=w-20;cx.font=fs+'px sans-serif';while(cx.measureText(r.val||r).width>mw&&fs>16){fs--;cx.font=fs+'px sans-serif';}
-        cx.fillStyle='#111';cx.textAlign='right';cx.fillText(r.val||r,x+w+PAD-12,mid+17);
+        cx.fillStyle='#111';cx.textAlign='right';cx.fillText(r.val||r,i===n-1?x+w-PAD:x+w-12,mid+17);
       }
     });
   }
