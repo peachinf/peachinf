@@ -482,7 +482,7 @@ function genCertImg(){vib();
         cx.fillStyle='#888';cx.font=fsTime+'px sans-serif';
         var timeW=cx.measureText(timeStr).width;
         var totalW=timeW+8+valW;
-        var startX=x+w-PAD-totalW;
+        var startX=x+(i===n-1?w-PAD:w-12)-totalW;
         cx.textAlign='left';cx.fillText(timeStr,startX,mid+18);
         cx.fillStyle='#111';cx.font=fs+'px sans-serif';cx.textAlign='left';cx.fillText(r.val,startX+timeW+8,mid+18);
       } else if(isAmt){
