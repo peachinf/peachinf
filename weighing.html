@@ -490,7 +490,7 @@ function genCertImg(){vib();
         cx.fillStyle='#c0392b';cx.textAlign='right';cx.fillText(r.val||r,W-PAD,mid+17);
       } else {
         var fs=fsBase,mw=w-20;cx.font=fs+'px sans-serif';while(cx.measureText(r.val||r).width>mw&&fs>16){fs--;cx.font=fs+'px sans-serif';}
-        cx.fillStyle='#111';cx.textAlign='center';cx.fillText(r.val||r,x+w/2,mid+17);
+        cx.fillStyle='#111';cx.textAlign='right';cx.fillText(r.val||r,x+w-12,mid+17);
       }
     });
   }
@@ -498,7 +498,7 @@ function genCertImg(){vib();
   drawRow(y,'일     자',function(ry,mid){singleCenter(ry,mid,date);});y+=ROW;
   drawRow(y,'차량번호',function(ry,mid){singleCenter(ry,mid,car);});y+=ROW;
   drawRow(y,'거 래 처',function(ry,mid){singleCenter(ry,mid,company);});y+=ROW;
-  drawRow(y,'품     명',function(ry,mid){multiCols(ry,mid,matched.map(function(r){return r.item||'-';}),false,false);});y+=ROW;
+  drawRow(y,'품     명',function(ry,mid){if(n===1){singleCenter(ry,mid,matched[0].item||'-');}else{multiCols(ry,mid,matched.map(function(r){return r.item||'-';}),false,false);}});y+=ROW;
   drawRow(y,'총 중 량',function(ry,mid){multiCols(ry,mid,matched.map(function(r){return{time:r.grossTime||'',val:fmt(r.gross)};}),true,false);});y+=ROW;
   drawRow(y,'공     차',function(ry,mid){multiCols(ry,mid,matched.map(function(r){return{time:r.tareTime||'',val:fmt(r.tare)};}),true,false);});y+=ROW;
   drawRow(y,'감     량',function(ry,mid){multiCols(ry,mid,matched.map(function(r){return fmt(r.loss||0);}),false,false);});y+=ROW;
