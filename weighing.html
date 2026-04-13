@@ -429,10 +429,10 @@ function genCertImg(){vib();
   var n=matched.length;
   var totalAmount=matched.reduce(function(s,r){return s+(Number(r.amount)||0);},0);
   var W=1000,LW=280,ROW=120,PAD=55;
+  var subTW=170;
   var subW=Math.floor((W-LW)/n);
-  var subTW=Math.floor(subW*0.33);
-  var fsBase=n===1?56:n===2?48:38;
-  var fsTime=n===1?32:n===2?28:24;
+  var fsBase=n===1?56:n===2?50:40;
+  var fsTime=n===1?40:n===2?30:26;
   var HDR=160,SUB=46,TY=HDR+SUB,TABLE_H=11*ROW,FTR=250,H=TY+TABLE_H+FTR;
   var cv=mkCanvas(W,H),cx=cv.getContext('2d');
   cx.fillStyle='#fff';cx.fillRect(0,0,W,H);
@@ -452,18 +452,37 @@ function genCertImg(){vib();
     cx.fillStyle='#1a2e5a';cx.font='bold 44px sans-serif';cx.textAlign='center';cx.fillText(lbl,LW/2,mid+16);
     fn(y,mid);
   }
-  function singleCenter(y,mid,val){var fs=48,mw=W-LW-10;cx.font=fs+'px sans-serif';while(cx.measureText(val).width>mw&&fs>20){fs--;cx.font=fs+'px sans-serif';}cx.fillStyle='#111';cx.textAlign='center';cx.fillText(val,LW+(W-LW)/2,mid+17);}
+  function singleCenter(y,mid,val){
+    var fs=48,mw=W-LW-10;cx.font=fs+'px sans-serif';
+    while(cx.measureText(val).width>mw&&fs>20){fs--;cx.font=fs+'px sans-serif';}
+    cx.fillStyle='#111';cx.textAlign='center';cx.fillText(val,LW+(W-LW)/2,mid+17);
+  }
   function multiCols(y,mid,vals,isTime,isAmt){
+    if(n===1&&isTime){
+      cx.strokeStyle='#b0bfd8';cx.lineWidth=1;cx.beginPath();cx.moveTo(LW+subTW,y);cx.lineTo(LW+subTW,y+ROW);cx.stroke();
+      cx.fillStyle='#333';cx.font=fsTime+'px sans-serif';cx.textAlign='center';cx.fillText(vals[0].time||'',LW+subTW/2,mid+15);
+      var fs=fsBase,mw=W-LW-subTW-PAD;cx.font=fs+'px sans-serif';while(cx.measureText(vals[0].val).width>mw&&fs>16){fs--;cx.font=fs+'px sans-serif';}
+      cx.fillStyle='#111';cx.textAlign='right';cx.fillText(vals[0].val,W-PAD,mid+18);
+      return;
+    }
+    if(n===1&&!isTime){
+      var fs=isAmt?66:fsBase,mw=W-LW-PAD-10;cx.font=(isAmt?'bold ':'')+fs+'px sans-serif';while(cx.measureText(vals[0].val||vals[0]).width>mw&&fs>16){fs--;cx.font=(isAmt?'bold ':'')+fs+'px sans-serif';}
+      cx.fillStyle=isAmt?'#c0392b':'#111';cx.textAlign='right';cx.fillText(vals[0].val||vals[0],W-PAD,mid+17);
+      return;
+    }
     vals.forEach(function(r,i){
       var x=LW+i*subW,w=subW;
       if(i>0){cx.strokeStyle='#b0bfd8';cx.lineWidth=1;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x,y+ROW);cx.stroke();}
       if(isTime){
-        var fs=fsBase,mw=w-8;cx.font=fs+'px sans-serif';while(cx.measureText(r.val).width>mw&&fs>16){fs--;cx.font=fs+'px sans-serif';}
-        cx.fillStyle='#111';cx.textAlign='right';cx.fillText(r.val,x+w-8,mid+10);
-        cx.fillStyle='#888';cx.font=(fsTime)+'px sans-serif';cx.textAlign='right';cx.fillText(r.time||'',x+w-8,mid+34);
+        var fs=fsBase,mw=w-20;cx.font=fs+'px sans-serif';while(cx.measureText(r.val).width>mw&&fs>16){fs--;cx.font=fs+'px sans-serif';}
+        cx.fillStyle='#888';cx.font=fsTime+'px sans-serif';cx.textAlign='right';cx.fillText(r.time||'',x+w-16,mid-6);
+        cx.fillStyle='#111';cx.font=fs+'px sans-serif';cx.textAlign='right';cx.fillText(r.val,x+w-16,mid+24);
+      } else if(isAmt){
+        var fs=66,mw=W-LW-PAD-10;cx.font='bold '+fs+'px sans-serif';while(cx.measureText(r.val||r).width>mw&&fs>20){fs--;cx.font='bold '+fs+'px sans-serif';}
+        cx.fillStyle='#c0392b';cx.textAlign='right';cx.fillText(r.val||r,W-PAD,mid+17);
       } else {
-        var fs=isAmt?66:fsBase,mw=w-10;cx.font=(isAmt?'bold ':'')+fs+'px sans-serif';while(cx.measureText(r.val||r).width>mw&&fs>16){fs--;cx.font=(isAmt?'bold ':'')+fs+'px sans-serif';}
-        cx.fillStyle=isAmt?'#c0392b':'#111';cx.textAlign='right';cx.fillText(r.val||r,x+w-8,mid+17);
+        var fs=fsBase,mw=w-20;cx.font=fs+'px sans-serif';while(cx.measureText(r.val||r).width>mw&&fs>16){fs--;cx.font=fs+'px sans-serif';}
+        cx.fillStyle='#111';cx.textAlign='center';cx.fillText(r.val||r,x+w/2,mid+17);
       }
     });
   }
@@ -477,8 +496,16 @@ function genCertImg(){vib();
   drawRow(y,'감     량',function(ry,mid){multiCols(ry,mid,matched.map(function(r){return fmt(r.loss||0);}),false,false);});y+=ROW;
   drawRow(y,'인 수 량',function(ry,mid){multiCols(ry,mid,matched.map(function(r){return fmt(r.real||0);}),false,false);});y+=ROW;
   drawRow(y,'단     가',function(ry,mid){multiCols(ry,mid,matched.map(function(r){return fmt(r.price||0);}),false,false);});y+=ROW;
-  drawRow(y,'금     액',function(ry,mid){var val=fmt(totalAmount),fs=66,mw=W-LW-PAD-10;cx.font='bold '+fs+'px sans-serif';while(cx.measureText(val).width>mw&&fs>20){fs--;cx.font='bold '+fs+'px sans-serif';}cx.fillStyle='#c0392b';cx.textAlign='right';cx.fillText(val,W-PAD,mid+18);});y+=ROW;
-  drawRow(y,'비     고',function(ry,mid){var fs=44,mw=W-LW-20,val=memo||'';cx.font=fs+'px sans-serif';while(cx.measureText(val).width>mw&&fs>20){fs--;cx.font=fs+'px sans-serif';}cx.fillStyle='#111';cx.textAlign='left';cx.fillText(val,LW+12,mid+17);});y+=ROW;
+  drawRow(y,'금     액',function(ry,mid){
+    var val=fmt(totalAmount),fs=66,mw=W-LW-PAD-10;
+    cx.font='bold '+fs+'px sans-serif';while(cx.measureText(val).width>mw&&fs>20){fs--;cx.font='bold '+fs+'px sans-serif';}
+    cx.fillStyle='#c0392b';cx.textAlign='right';cx.fillText(val,W-PAD,mid+18);
+  });y+=ROW;
+  drawRow(y,'비     고',function(ry,mid){
+    var fs=44,mw=W-LW-20,val=memo||'';
+    cx.font=fs+'px sans-serif';while(cx.measureText(val).width>mw&&fs>20){fs--;cx.font=fs+'px sans-serif';}
+    cx.fillStyle='#111';cx.textAlign='left';cx.fillText(val,LW+12,mid+17);
+  });y+=ROW;
   var BY=TY+TABLE_H;
   cx.fillStyle='#f2f5fb';cx.fillRect(0,BY,W,FTR);cx.strokeStyle='#8090b0';cx.lineWidth=2;cx.beginPath();cx.moveTo(0,BY);cx.lineTo(W,BY);cx.stroke();cx.strokeRect(0,BY,W,FTR);
   cx.fillStyle='#1a2e5a';cx.font='bold 46px sans-serif';cx.textAlign='center';cx.fillText('대성자원(재달)',W/2,BY+68);
@@ -489,6 +516,7 @@ function genCertImg(){vib();
   lines.forEach(function(l,i){cx.font=l.f;cx.fillStyle=l.c;cx.textAlign='left';cx.fillText(l.t,bx,ys2[i]);});
   shareImg(cv,'계근표_'+car+'_'+date+'.jpg');
 }
+  
 function genBuyImg(){vib();
   var from=document.getElementById('sFrom').value||todayStr().slice(0,7)+'-01';
   var to=document.getElementById('sTo').value||todayStr();
