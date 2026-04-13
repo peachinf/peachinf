@@ -45,8 +45,9 @@ const FILE_IDS = {
 // ─── 순차처리 Queue ───────────────────────────────────
 let _weighingQueue = Promise.resolve();
 function weighingQueue(fn) {
-  _weighingQueue = _weighingQueue.then(() => fn()).catch((e) => { throw e; });
-  return _weighingQueue;
+  const result = _weighingQueue.then(() => fn());
+  _weighingQueue = result.catch(() => {});
+  return result;
 }
 
 // ─── 공통 읽기/쓰기 함수 ─────────────────────────────
