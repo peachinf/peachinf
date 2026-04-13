@@ -419,36 +419,21 @@ function loadToForm(id){vib();
 }
 
 function mkCanvas(w,h){var cv=document.createElement('canvas');cv.width=w;cv.height=h;return cv;}
-
 function genCertImg(){vib();
   var date=document.getElementById('fDate').value;
   var car=document.getElementById('fCar').value.trim()||'-';
   var company=document.getElementById('fCompany').value.trim()||'-';
-  var item=document.getElementById('fItem').value.trim()||'-';
-  var gross=pn(document.getElementById('fGross').value);
-  var grossTime=document.getElementById('fGrossTime').value;
-  var tare=pn(document.getElementById('fTare').value);
-  var tareTime=document.getElementById('fTareTime').value;
-  var loss=pn(document.getElementById('fLoss').value);
-  var real=pn(document.getElementById('fReal').value.replace(/,/g,''));
-  var price=pn(document.getElementById('fPrice').value);
-  var amount=pn(document.getElementById('fAmount').value.replace(/,/g,''));
   var memo=document.getElementById('fMemo').value.trim();
-  var W=1000,LW=280,TW=170,ROW=120,PAD=55;
-  var ROWS=[
-    {lbl:'일     자',val:date,center:true,hasTime:false},
-    {lbl:'차량번호',val:car,center:true,hasTime:false},
-    {lbl:'거 래 처',val:company,center:true,hasTime:false},
-    {lbl:'품     명',val:item,center:true,hasTime:false},
-    {lbl:'총 중 량',val:fmt(gross),center:false,hasTime:true,time:grossTime},
-    {lbl:'공     차',val:fmt(tare),center:false,hasTime:true,time:tareTime},
-    {lbl:'감     량',val:fmt(loss),center:false,hasTime:false},
-    {lbl:'인 수 량',val:fmt(real),center:false,hasTime:false},
-    {lbl:'단     가',val:fmt(price),center:false,hasTime:false},
-    {lbl:'금     액',val:fmt(amount),center:false,hasTime:false,isAmt:true},
-    {lbl:'비     고',val:memo||'',center:false,hasTime:false},
-  ];
-  var HDR=160,SUB=46,TY=HDR+SUB,TABLE_H=ROWS.length*ROW,FTR=250,H=TY+TABLE_H+FTR;
+  var matched=records.filter(function(r){return r.date===date&&r.car===car&&r.type==='매입';}).slice(0,3);
+  if(matched.length===0){matched=[{item:document.getElementById('fItem').value.trim()||'-',gross:pn(document.getElementById('fGross').value),tare:pn(document.getElementById('fTare').value),grossTime:document.getElementById('fGrossTime').value,tareTime:document.getElementById('fTareTime').value,loss:pn(document.getElementById('fLoss').value),real:pn(document.getElementById('fReal').value.replace(/,/g,'')),price:pn(document.getElementById('fPrice').value),amount:pn(document.getElementById('fAmount').value.replace(/,/g,''))}];}
+  var n=matched.length;
+  var totalAmount=matched.reduce(function(s,r){return s+(Number(r.amount)||0);},0);
+  var W=1000,LW=280,ROW=120,PAD=55;
+  var subW=Math.floor((W-LW)/n);
+  var subTW=Math.floor(subW*0.33);
+  var fsBase=n===1?50:n===2?42:34;
+  var fsTime=n===1?40:n===2?34:28;
+  var HDR=160,SUB=46,TY=HDR+SUB,TABLE_H=11*ROW,FTR=250,H=TY+TABLE_H+FTR;
   var cv=mkCanvas(W,H),cx=cv.getContext('2d');
   cx.fillStyle='#fff';cx.fillRect(0,0,W,H);
   cx.fillStyle='#5a7ab5';cx.fillRect(0,0,W,HDR);
@@ -458,30 +443,53 @@ function genCertImg(){vib();
   cx.beginPath();cx.moveTo(0,HDR+SUB);cx.lineTo(W,HDR+SUB);cx.stroke();
   cx.fillStyle='#888';cx.font='20px sans-serif';cx.textAlign='right';cx.fillText('(공급자 보관용)',W-20,HDR+SUB/2+8);
   cx.strokeStyle='#8090b0';cx.lineWidth=2;cx.strokeRect(0,TY,W,TABLE_H);
-  ROWS.forEach(function(r,i){
-    var y=TY+i*ROW,mid=y+ROW/2;
+  function drawRow(y,lbl,fn){
+    var mid=y+ROW/2;
     cx.fillStyle='#dce5f5';cx.fillRect(0,y,LW,ROW);
     cx.fillStyle='#fff';cx.fillRect(LW,y,W-LW,ROW);
     cx.strokeStyle='#b0bfd8';cx.lineWidth=1;cx.beginPath();cx.moveTo(0,y+ROW);cx.lineTo(W,y+ROW);cx.stroke();
     cx.beginPath();cx.moveTo(LW,y);cx.lineTo(LW,y+ROW);cx.stroke();
-    if(r.hasTime){cx.beginPath();cx.moveTo(LW+TW,y);cx.lineTo(LW+TW,y+ROW);cx.stroke();cx.fillStyle='#333';cx.font='40px sans-serif';cx.textAlign='center';cx.fillText(r.time||'',LW+TW/2,mid+15);}
-    cx.fillStyle='#1a2e5a';cx.font='bold 44px sans-serif';cx.textAlign='center';cx.fillText(r.lbl,LW/2,mid+16);
-    var vx=r.hasTime?(LW+TW):LW,vw=W-vx;
-    cx.fillStyle=r.isAmt?'#c0392b':'#111';
-    if(r.center){var fs=48,maxW=vw-10;cx.font=fs+'px sans-serif';while(cx.measureText(r.val).width>maxW&&fs>20){fs--;cx.font=fs+'px sans-serif';}cx.textAlign='center';cx.fillText(r.val,vx+vw/2,mid+17);}
-    else{var fs2=r.isAmt?66:50,maxW2=vw-PAD-10;cx.font=(r.isAmt?'bold ':'')+fs2+'px sans-serif';while(cx.measureText(r.val).width>maxW2&&fs2>20){fs2--;cx.font=(r.isAmt?'bold ':'')+fs2+'px sans-serif';}cx.textAlign='right';cx.fillText(r.val,W-PAD,mid+18);}
-  });
+    cx.fillStyle='#1a2e5a';cx.font='bold 44px sans-serif';cx.textAlign='center';cx.fillText(lbl,LW/2,mid+16);
+    fn(y,mid);
+  }
+  function singleCenter(y,mid,val){var fs=48,mw=W-LW-10;cx.font=fs+'px sans-serif';while(cx.measureText(val).width>mw&&fs>20){fs--;cx.font=fs+'px sans-serif';}cx.fillStyle='#111';cx.textAlign='center';cx.fillText(val,LW+(W-LW)/2,mid+17);}
+  function multiCols(y,mid,vals,isTime,isAmt){
+    vals.forEach(function(r,i){
+      var x=LW+i*subW,w=subW;
+      if(i>0){cx.strokeStyle='#b0bfd8';cx.lineWidth=1;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x,y+ROW);cx.stroke();}
+      if(isTime){
+        cx.strokeStyle='#b0bfd8';cx.lineWidth=1;cx.beginPath();cx.moveTo(x+subTW,y);cx.lineTo(x+subTW,y+ROW);cx.stroke();
+        cx.fillStyle='#333';cx.font=fsTime+'px sans-serif';cx.textAlign='center';cx.fillText(r.time||'',x+subTW/2,mid+15);
+        var fs=fsBase,mw=w-subTW-10;cx.font=fs+'px sans-serif';while(cx.measureText(r.val).width>mw&&fs>16){fs--;cx.font=fs+'px sans-serif';}
+        cx.fillStyle='#111';cx.textAlign='right';cx.fillText(r.val,x+w-8,mid+18);
+      } else {
+        var fs=isAmt?66:fsBase,mw=w-10;cx.font=(isAmt?'bold ':'')+fs+'px sans-serif';while(cx.measureText(r.val||r).width>mw&&fs>16){fs--;cx.font=(isAmt?'bold ':'')+fs+'px sans-serif';}
+        cx.fillStyle=isAmt?'#c0392b':'#111';cx.textAlign='center';cx.fillText(r.val||r,x+w/2,mid+17);
+      }
+    });
+  }
+  var y=TY;
+  drawRow(y,'일     자',function(ry,mid){singleCenter(ry,mid,date);});y+=ROW;
+  drawRow(y,'차량번호',function(ry,mid){singleCenter(ry,mid,car);});y+=ROW;
+  drawRow(y,'거 래 처',function(ry,mid){singleCenter(ry,mid,company);});y+=ROW;
+  drawRow(y,'품     명',function(ry,mid){multiCols(ry,mid,matched.map(function(r){return r.item||'-';}),false,false);});y+=ROW;
+  drawRow(y,'총 중 량',function(ry,mid){multiCols(ry,mid,matched.map(function(r){return{time:r.grossTime||'',val:fmt(r.gross)};}),true,false);});y+=ROW;
+  drawRow(y,'공     차',function(ry,mid){multiCols(ry,mid,matched.map(function(r){return{time:r.tareTime||'',val:fmt(r.tare)};}),true,false);});y+=ROW;
+  drawRow(y,'감     량',function(ry,mid){multiCols(ry,mid,matched.map(function(r){return fmt(r.loss||0);}),false,false);});y+=ROW;
+  drawRow(y,'인 수 량',function(ry,mid){multiCols(ry,mid,matched.map(function(r){return fmt(r.real||0);}),false,false);});y+=ROW;
+  drawRow(y,'단     가',function(ry,mid){multiCols(ry,mid,matched.map(function(r){return fmt(r.price||0);}),false,false);});y+=ROW;
+  drawRow(y,'금     액',function(ry,mid){var val=fmt(totalAmount),fs=66,mw=W-LW-PAD-10;cx.font='bold '+fs+'px sans-serif';while(cx.measureText(val).width>mw&&fs>20){fs--;cx.font='bold '+fs+'px sans-serif';}cx.fillStyle='#c0392b';cx.textAlign='right';cx.fillText(val,W-PAD,mid+18);});y+=ROW;
+  drawRow(y,'비     고',function(ry,mid){singleCenter(ry,mid,memo||'');});y+=ROW;
   var BY=TY+TABLE_H;
   cx.fillStyle='#f2f5fb';cx.fillRect(0,BY,W,FTR);cx.strokeStyle='#8090b0';cx.lineWidth=2;cx.beginPath();cx.moveTo(0,BY);cx.lineTo(W,BY);cx.stroke();cx.strokeRect(0,BY,W,FTR);
   cx.fillStyle='#1a2e5a';cx.font='bold 46px sans-serif';cx.textAlign='center';cx.fillText('대성자원(재달)',W/2,BY+68);
   cx.strokeStyle='#b0bfd8';cx.lineWidth=1;cx.beginPath();cx.moveTo(60,BY+86);cx.lineTo(W-60,BY+86);cx.stroke();
   var lines=[{t:'주소 : 전남 순천시 주암면 광천리 215',f:'26px sans-serif',c:'#333'},{t:'HP : 010-5773-1520    Fax : 0504-428-1520',f:'26px sans-serif',c:'#333'},{t:'필히 재확인 하십시오. ( 단위 : kg , 단가 : 원/kg )',f:'22px sans-serif',c:'#888'},{t:'확인 후 중량의 변동에 대한 책임은 본 업소에는 없습니다.',f:'22px sans-serif',c:'#888'}];
-  var maxW=0;lines.forEach(function(l){cx.font=l.f;var w=cx.measureText(l.t).width;if(w>maxW)maxW=w;});
-  var bx=Math.round((W-maxW)/2),ys=[BY+120,BY+158,BY+196,BY+230];
-  lines.forEach(function(l,i){cx.font=l.f;cx.fillStyle=l.c;cx.textAlign='left';cx.fillText(l.t,bx,ys[i]);});
+  var maxW2=0;lines.forEach(function(l){cx.font=l.f;var w=cx.measureText(l.t).width;if(w>maxW2)maxW2=w;});
+  var bx=Math.round((W-maxW2)/2),ys2=[BY+120,BY+158,BY+196,BY+230];
+  lines.forEach(function(l,i){cx.font=l.f;cx.fillStyle=l.c;cx.textAlign='left';cx.fillText(l.t,bx,ys2[i]);});
   shareImg(cv,'계근표_'+car+'_'+date+'.jpg');
 }
-
 function genBuyImg(){vib();
   var from=document.getElementById('sFrom').value||todayStr().slice(0,7)+'-01';
   var to=document.getElementById('sTo').value||todayStr();
