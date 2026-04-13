@@ -1,0 +1,12 @@
+steps:
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args:
+      - gcloud
+      - run
+      - deploy
+      - peachinf
+      - --source=.
+      - --region=europe-west1
+      - --quiet
+options:
+  logging: CLOUD_LOGGING_ONLY
