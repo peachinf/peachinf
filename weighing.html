@@ -524,7 +524,7 @@ function genBuyImg(){vib();
     cx.fillStyle='#1a1a2e';cx.font='20px sans-serif';
     COLS.forEach(function(c,i){
       var val=c.num?fmt(r[c.key]):(r[c.key]||'');
-      var maxW=c.w-8,fs=20;cx.font=fs+'px sans-serif';
+      var maxW=c.w-(i===COLS.length-1?20:8),fs=20;cx.font=fs+'px sans-serif';
       while(cx.measureText(val).width>maxW&&fs>10){fs--;cx.font=fs+'px sans-serif';}
       cx.textAlign=c.align;
       var tx=c.align==='right'?xs[i]+c.w-4:c.align==='center'?xs[i]+c.w/2:xs[i]+4;
