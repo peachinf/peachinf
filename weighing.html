@@ -430,7 +430,7 @@ function genCertImg(){vib();
   var totalAmount=matched.reduce(function(s,r){return s+(Number(r.amount)||0);},0);
   var W=1000,LW=280,ROW=120,PAD=55;
   var subTW=170;
-  var subW=Math.floor((W-LW)/n);
+  var subW=n>1?Math.floor((W-LW-PAD)/n):Math.floor((W-LW)/n);
   var fsBase=n===1?56:n===2?50:40;
   var fsTime=n===1?40:n===2?30:26;
   var HDR=160,SUB=46,TY=HDR+SUB,TABLE_H=11*ROW,FTR=250,H=TY+TABLE_H+FTR;
