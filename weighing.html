@@ -494,6 +494,9 @@ function genBuyImg(){vib();
   var COLS=[{h:'일자',w:140,key:'date',align:'center'},{h:'차량번호',w:100,key:'car',align:'center'},{h:'거래처',w:160,key:'company',align:'center'},{h:'품목',w:130,key:'item',align:'center'},{h:'총중량',w:100,key:'gross',align:'right',num:true},{h:'공차',w:90,key:'tare',align:'right',num:true},{h:'감량',w:80,key:'loss',align:'right',num:true},{h:'인수량',w:100,key:'real',align:'right',num:true},{h:'단가',w:80,key:'price',align:'right',num:true},{h:'금액',w:120,key:'amount',align:'right',num:true},{h:'비고',w:120,key:'memo',align:'left'}];
   var totalW=COLS.reduce(function(s,c){return s+c.w;},0);
   var scale=(W-PAD*2)/totalW;COLS.forEach(function(c){c.w=Math.round(c.w*scale);});
+  var tmpCv=mkCanvas(10,10),tmpCx=tmpCv.getContext('2d');tmpCx.font='20px sans-serif';
+  var maxMemoW=0;target.forEach(function(r){var w=tmpCx.measureText(r.memo||'').width+16;if(w>maxMemoW)maxMemoW=w;});
+  if(maxMemoW>COLS[10].w){var extra=Math.ceil(maxMemoW-COLS[10].w);COLS[10].w=Math.ceil(maxMemoW);[2,3].forEach(function(i){COLS[i].w=Math.max(60,COLS[i].w-Math.ceil(extra/2));});}
   var HDR=70,INFO=30,CHDR=44,ROW=50,minH=HDR+INFO+CHDR+(target.length+1)*ROW+40;
   if(H<minH)H=minH;
   var cv=mkCanvas(CW,Math.max(CH,H)),cx=cv.getContext('2d');
