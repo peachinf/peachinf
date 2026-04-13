@@ -454,19 +454,24 @@ function genCertImg(){vib();
   }
   function singleCenter(y,mid,val){var fs=48,mw=W-LW-10;cx.font=fs+'px sans-serif';while(cx.measureText(val).width>mw&&fs>20){fs--;cx.font=fs+'px sans-serif';}cx.fillStyle='#111';cx.textAlign='center';cx.fillText(val,LW+(W-LW)/2,mid+17);}
   function multiCols(y,mid,vals,isTime,isAmt){
-    vals.forEach(function(r,i){
-      var x=LW+i*subW,w=subW;
-      if(i>0){cx.strokeStyle='#b0bfd8';cx.lineWidth=1;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x,y+ROW);cx.stroke();}
-      if(isTime){
-        cx.strokeStyle='#b0bfd8';cx.lineWidth=1;cx.beginPath();cx.moveTo(x+subTW,y);cx.lineTo(x+subTW,y+ROW);cx.stroke();
-        cx.fillStyle='#333';cx.font=fsTime+'px sans-serif';cx.textAlign='center';cx.fillText(r.time||'',x+subTW/2,mid+15);
-        var fs=fsBase,mw=w-subTW-10;cx.font=fs+'px sans-serif';while(cx.measureText(r.val).width>mw&&fs>16){fs--;cx.font=fs+'px sans-serif';}
+    if(isTime){
+      var timeW=subTW,valW=Math.floor((W-LW-timeW)/n);
+      cx.strokeStyle='#b0bfd8';cx.lineWidth=1;cx.beginPath();cx.moveTo(LW+timeW,y);cx.lineTo(LW+timeW,y+ROW);cx.stroke();
+      cx.fillStyle='#333';cx.font=fsTime+'px sans-serif';cx.textAlign='center';cx.fillText(vals[0].time||'',LW+timeW/2,mid+15);
+      vals.forEach(function(r,i){
+        var x=LW+timeW+i*valW,w=valW;
+        if(i>0){cx.strokeStyle='#b0bfd8';cx.lineWidth=1;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x,y+ROW);cx.stroke();}
+        var fs=fsBase,mw=w-10;cx.font=fs+'px sans-serif';while(cx.measureText(r.val).width>mw&&fs>16){fs--;cx.font=fs+'px sans-serif';}
         cx.fillStyle='#111';cx.textAlign='right';cx.fillText(r.val,x+w-8,mid+18);
-      } else {
+      });
+    } else {
+      vals.forEach(function(r,i){
+        var x=LW+i*subW,w=subW;
+        if(i>0){cx.strokeStyle='#b0bfd8';cx.lineWidth=1;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x,y+ROW);cx.stroke();}
         var fs=isAmt?66:fsBase,mw=w-10;cx.font=(isAmt?'bold ':'')+fs+'px sans-serif';while(cx.measureText(r.val||r).width>mw&&fs>16){fs--;cx.font=(isAmt?'bold ':'')+fs+'px sans-serif';}
-        cx.fillStyle=isAmt?'#c0392b':'#111';cx.textAlign='center';cx.fillText(r.val||r,x+w/2,mid+17);
-      }
-    });
+        cx.fillStyle=isAmt?'#c0392b':'#111';cx.textAlign='right';cx.fillText(r.val||r,x+w-8,mid+17);
+      });
+    }
   }
   var y=TY;
   drawRow(y,'일     자',function(ry,mid){singleCenter(ry,mid,date);});y+=ROW;
@@ -479,7 +484,7 @@ function genCertImg(){vib();
   drawRow(y,'인 수 량',function(ry,mid){multiCols(ry,mid,matched.map(function(r){return fmt(r.real||0);}),false,false);});y+=ROW;
   drawRow(y,'단     가',function(ry,mid){multiCols(ry,mid,matched.map(function(r){return fmt(r.price||0);}),false,false);});y+=ROW;
   drawRow(y,'금     액',function(ry,mid){var val=fmt(totalAmount),fs=66,mw=W-LW-PAD-10;cx.font='bold '+fs+'px sans-serif';while(cx.measureText(val).width>mw&&fs>20){fs--;cx.font='bold '+fs+'px sans-serif';}cx.fillStyle='#c0392b';cx.textAlign='right';cx.fillText(val,W-PAD,mid+18);});y+=ROW;
-  drawRow(y,'비     고',function(ry,mid){singleCenter(ry,mid,memo||'');});y+=ROW;
+  drawRow(y,'비     고',function(ry,mid){var fs=44,mw=W-LW-20,val=memo||'';cx.font=fs+'px sans-serif';while(cx.measureText(val).width>mw&&fs>20){fs--;cx.font=fs+'px sans-serif';}cx.fillStyle='#111';cx.textAlign='left';cx.fillText(val,LW+12,mid+17);});y+=ROW;
   var BY=TY+TABLE_H;
   cx.fillStyle='#f2f5fb';cx.fillRect(0,BY,W,FTR);cx.strokeStyle='#8090b0';cx.lineWidth=2;cx.beginPath();cx.moveTo(0,BY);cx.lineTo(W,BY);cx.stroke();cx.strokeRect(0,BY,W,FTR);
   cx.fillStyle='#1a2e5a';cx.font='bold 46px sans-serif';cx.textAlign='center';cx.fillText('대성자원(재달)',W/2,BY+68);
