@@ -547,34 +547,33 @@ function genBuyImg(){vib();
   var MX=50;
   // 제목
   cx.fillStyle='#111';cx.font='bold 34px sans-serif';cx.textAlign='center';cx.fillText('거 래 명 세 서',W/2,46);
-  cx.strokeStyle='#333';cx.lineWidth=2;cx.beginPath();cx.moveTo(MX,56);cx.lineTo(W-MX,56);cx.stroke();
-  cx.lineWidth=1;cx.beginPath();cx.moveTo(MX,60);cx.lineTo(W-MX,60);cx.stroke();
-  // 오른쪽 박스
-  var BX=W/2+20,BY=70,BW=W-MX-BX,BH=130;
-  cx.strokeStyle='#999';cx.lineWidth=1;cx.strokeRect(BX,BY,BW,BH);
-  cx.fillStyle='#f7f9fc';cx.fillRect(BX,BY,BW,26);
-  cx.strokeStyle='#999';cx.beginPath();cx.moveTo(BX,BY+26);cx.lineTo(BX+BW,BY+26);cx.stroke();
-  cx.fillStyle='#1a2e5a';cx.font='bold 17px sans-serif';cx.textAlign='center';cx.fillText('대성자원(재달)',BX+BW/2,BY+18);
-  cx.fillStyle='#333';cx.font='14px sans-serif';cx.textAlign='left';
-  var bpad=10,bly=BY+44,blg=20;
-  cx.fillText('사업자: 792-09-01611',BX+bpad,bly);bly+=blg;
-  cx.fillText('주  소: 전남 순천시 주암면 광천리215',BX+bpad,bly);bly+=blg;
-  cx.fillText('TEL : 010-5773-1520',BX+bpad,bly);bly+=blg;
-  cx.fillText('FAX : 0504-428-1520',BX+bpad,bly);bly+=blg;
-  cx.fillText('대  표: 조연천',BX+bpad,bly);
-  // 왼쪽
-  var LY=75;
-  cx.fillStyle='#111';cx.font='bold 20px sans-serif';cx.textAlign='left';
-  var companyText=company||'_____________';
-  cx.fillText(companyText,MX,LY+18);
-  var compW=cx.measureText(companyText).width;
-  cx.strokeStyle='#333';cx.lineWidth=1;cx.beginPath();cx.moveTo(MX,LY+22);cx.lineTo(MX+compW,LY+22);cx.stroke();
-  cx.font='14px sans-serif';cx.fillStyle='#666';cx.fillText(' 귀하',MX+compW+4,LY+18);
-  cx.fillStyle='#333';cx.font='15px sans-serif';
-  cx.fillText('아래와 같이 계산합니다.',MX,LY+50);
-  cx.fillText('거래일자:  '+from+' ~ '+to,MX,LY+78);
+  cx.strokeStyle='#333';cx.lineWidth=2;cx.beginPath();cx.moveTo(MX,58);cx.lineTo(W-MX,58);cx.stroke();
+  cx.lineWidth=0.5;cx.beginPath();cx.moveTo(MX,62);cx.lineTo(W-MX,62);cx.stroke();
+  // 오른쪽 공급자
+  cx.font='bold 20px sans-serif';cx.fillStyle='#111';cx.textAlign='center';
+  var RCX=W*0.72;
+  cx.fillText('대성자원(재달)',RCX,92);
+  cx.font='16px sans-serif';cx.textAlign='left';cx.fillStyle='#333';
+  var RI=W*0.57,rly=112,rlg=22;
+  cx.fillText('사업자번호: 792-09-01611',RI,rly);rly+=rlg;
+  cx.fillText('주      소: 전남 순천시 주암면 광천리215',RI,rly);rly+=rlg;
+  cx.fillText('전      화: 010-5773-1520',RI,rly);rly+=rlg;
+  cx.fillText('팩      스: 0504-428-1520',RI,rly);rly+=rlg;
+  cx.fillText('대      표: 조연천',RI,rly);
+  // 왼쪽 거래처
+  var LX=MX,LY=78;
+  cx.fillStyle='#111';cx.font='bold 18px sans-serif';cx.textAlign='left';
+  var companyText=company||'___________';
+  // 밑줄 영역
+  var lineW=200;
+  cx.strokeStyle='#333';cx.lineWidth=1;cx.beginPath();cx.moveTo(LX,LY+4);cx.lineTo(LX+lineW,LY+4);cx.stroke();
+  cx.fillText(companyText,LX+4,LY);
+  cx.font='14px sans-serif';cx.fillStyle='#555';cx.fillText(' 귀하',LX+cx.measureText(companyText).width+8,LY);
+  cx.fillStyle='#333';cx.font='16px sans-serif';
+  cx.fillText('아래와 같이 계산합니다.',LX,LY+28);
+  cx.fillText('거래일자: '+from+' ~ '+to,LX,LY+58);
   var totA=target.reduce(function(s,r){return s+(Number(r.amount)||0);},0);
-  cx.fillText('합계금액:  ₩'+fmt(totA),MX,LY+104);
+  cx.fillText('합계금액: ₩'+fmt(totA),LX,LY+84);
   var xs=[PAD];COLS.forEach(function(c){xs.push(xs[xs.length-1]+c.w);});
   var tableRight=xs[xs.length-1];
   var y=HDR;
