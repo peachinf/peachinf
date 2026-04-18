@@ -550,30 +550,32 @@ function genBuyImg(){vib();
   cx.strokeStyle='#333';cx.lineWidth=2;cx.beginPath();cx.moveTo(MX,58);cx.lineTo(W-MX,58);cx.stroke();
   cx.lineWidth=0.5;cx.beginPath();cx.moveTo(MX,62);cx.lineTo(W-MX,62);cx.stroke();
   // 오른쪽 공급자
-  cx.font='bold 20px sans-serif';cx.fillStyle='#111';cx.textAlign='center';
-  var RCX=W*0.72;
-  cx.fillText('대성자원(재달)',RCX,92);
-  cx.font='16px sans-serif';cx.textAlign='left';cx.fillStyle='#333';
-  var RI=W*0.57,rly=112,rlg=22;
-  cx.fillText('사업자번호: 792-09-01611',RI,rly);rly+=rlg;
-  cx.fillText('주      소: 전남 순천시 주암면 광천리215',RI,rly);rly+=rlg;
-  cx.fillText('전      화: 010-5773-1520',RI,rly);rly+=rlg;
-  cx.fillText('팩      스: 0504-428-1520',RI,rly);rly+=rlg;
-  cx.fillText('대      표: 조연천',RI,rly);
-  // 왼쪽 거래처
-  var LX=MX,LY=78;
-  cx.fillStyle='#111';cx.font='bold 18px sans-serif';cx.textAlign='left';
+  var LX=MX,RX=W/2+20,LY=74,lg=26;
+  // 왼쪽
+  cx.fillStyle='#111';cx.font='bold 22px sans-serif';cx.textAlign='left';
   var companyText=company||'___________';
-  // 밑줄 영역
-  var lineW=200;
-  cx.strokeStyle='#333';cx.lineWidth=1;cx.beginPath();cx.moveTo(LX,LY+4);cx.lineTo(LX+lineW,LY+4);cx.stroke();
-  cx.fillText(companyText,LX+4,LY);
-  cx.font='14px sans-serif';cx.fillStyle='#555';cx.fillText(' 귀하',LX+cx.measureText(companyText).width+8,LY);
-  cx.fillStyle='#333';cx.font='16px sans-serif';
-  cx.fillText('아래와 같이 계산합니다.',LX,LY+28);
-  cx.fillText('거래일자: '+from+' ~ '+to,LX,LY+58);
+  cx.fillText(companyText,LX,LY);
+  var compW=cx.measureText(companyText).width;
+  cx.strokeStyle='#333';cx.lineWidth=1;cx.beginPath();cx.moveTo(LX,LY+4);cx.lineTo(LX+compW,LY+4);cx.stroke();
+  cx.font='16px sans-serif';cx.fillStyle='#666';cx.fillText(' 귀하',LX+compW+4,LY);
+  cx.fillStyle='#333';cx.font='18px sans-serif';
+  cx.fillText('아래와 같이 계산합니다.',LX,LY+lg+4);
+  var dateText='거래일자: '+from+' ~ '+to;
+  cx.fillText(dateText,LX,LY+lg*2+8);
+  var dtW=cx.measureText(dateText).width;
+  cx.strokeStyle='#555';cx.lineWidth=1;cx.beginPath();cx.moveTo(LX,LY+lg*2+12);cx.lineTo(LX+dtW,LY+lg*2+12);cx.stroke();
   var totA=target.reduce(function(s,r){return s+(Number(r.amount)||0);},0);
-  cx.fillText('합계금액: ₩'+fmt(totA),LX,LY+84);
+  cx.fillStyle='#111';cx.fillText('합계금액: ₩'+fmt(totA),LX,LY+lg*3+12);
+  // 오른쪽
+  cx.font='bold 22px sans-serif';cx.textAlign='center';cx.fillStyle='#111';
+  var RCX=RX+(W-MX-RX)/2;
+  cx.fillText('대성자원(재달)',RCX,LY+4);
+  cx.font='18px sans-serif';cx.textAlign='left';cx.fillStyle='#333';
+  var RI=RX+10,rly=LY+lg+4,rlg=26;
+  cx.fillText('792-09-01611',RI,rly);rly+=rlg;
+  cx.fillText('주  소: 전남 순천시 주암면 광천리215',RI,rly);rly+=rlg;
+  cx.fillText('전  화: 010-5773-1520',RI,rly);rly+=rlg;
+  cx.fillText('대  표: 조연천',RI,rly);
   var xs=[PAD];COLS.forEach(function(c){xs.push(xs[xs.length-1]+c.w);});
   var tableRight=xs[xs.length-1];
   var y=HDR;
