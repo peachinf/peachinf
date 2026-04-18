@@ -540,8 +540,7 @@ function genBuyImg(){vib();
   var tmpCv=mkCanvas(10,10),tmpCx=tmpCv.getContext('2d');tmpCx.font='18px sans-serif';
   var maxMemoW=0;target.forEach(function(r){var w=tmpCx.measureText(r.memo||'').width+16;if(w>maxMemoW)maxMemoW=w;});
   if(maxMemoW>COLS[9].w){var need=Math.min(Math.ceil(maxMemoW-COLS[9].w),150);var shrinkIdx=[2,1,0],mins=[70,60,60],got=0;for(var si=0;si<shrinkIdx.length&&got<need;si++){var avail=Math.max(0,COLS[shrinkIdx[si]].w-mins[si]);var take=Math.min(avail,need-got);COLS[shrinkIdx[si]].w-=take;got+=take;}COLS[9].w+=got;}
-  var HDR=200,CHDR=36,ROW=44,minH=HDR+CHDR+(target.length+1)*ROW+60;
-  if(H<minH)H=minH;
+  var CHDR=36,ROW=44;
   var cv=mkCanvas(W,H),cx=cv.getContext('2d');
   cx.fillStyle='#fff';cx.fillRect(0,0,W,H);
   var MX=50;
@@ -549,8 +548,7 @@ function genBuyImg(){vib();
   cx.fillStyle='#111';cx.font='bold 34px sans-serif';cx.textAlign='center';cx.fillText('거 래 명 세 서',W/2,46);
   cx.strokeStyle='#333';cx.lineWidth=2;cx.beginPath();cx.moveTo(MX,58);cx.lineTo(W-MX,58);cx.stroke();
   cx.lineWidth=0.5;cx.beginPath();cx.moveTo(MX,62);cx.lineTo(W-MX,62);cx.stroke();
-  // 오른쪽 공급자
-  var LX=MX,RX=W/2+20,LY=74,lg=26;
+  var LX=MX,RX=W/2+20,LY=90,lg=26;
   // 왼쪽
   cx.fillStyle='#111';cx.font='bold 22px sans-serif';cx.textAlign='left';
   var companyText=company||'___________';
@@ -564,20 +562,27 @@ function genBuyImg(){vib();
   cx.fillText(dateText,LX,LY+lg*2+8);
   var dtW=cx.measureText(dateText).width;
   cx.strokeStyle='#555';cx.lineWidth=1;cx.beginPath();cx.moveTo(LX,LY+lg*2+12);cx.lineTo(LX+dtW,LY+lg*2+12);cx.stroke();
-  var totA=target.reduce(function(s,r){return s+(Number(r.amount)||0);},0);
-  cx.fillStyle='#111';cx.fillText('합계금액: ₩'+fmt(totA),LX,LY+lg*3+12);
   // 오른쪽
   cx.font='bold 22px sans-serif';cx.textAlign='center';cx.fillStyle='#111';
   var RCX=RX+(W-MX-RX)/2;
   cx.fillText('대성자원(재달)',RCX,LY+4);
+  cx.font='17px sans-serif';cx.fillStyle='#555';
+  cx.fillText('792-09-01611',RCX,LY+4+24);
   cx.font='18px sans-serif';cx.textAlign='left';cx.fillStyle='#333';
-  var RI=RX+10,rly=LY+lg+4,rlg=26;
-  cx.fillText('792-09-01611',RI,rly);rly+=rlg;
+  var RI=RX+10,rly=LY+lg+4+24,rlg=26;
   cx.fillText('주  소: 전남 순천시 주암면 광천리215',RI,rly);rly+=rlg;
   cx.fillText('전  화: 010-5773-1520',RI,rly);rly+=rlg;
   cx.fillText('대  표: 조연천',RI,rly);
   var xs=[PAD];COLS.forEach(function(c){xs.push(xs[xs.length-1]+c.w);});
   var tableRight=xs[xs.length-1];
+  // 합계금액 테이블 바로 위
+  var totA=target.reduce(function(s,r){return s+(Number(r.amount)||0);},0);
+  var HDR=Math.max(rly+rlg,LY+lg*3+12);
+  cx.fillStyle='#111';cx.font='18px sans-serif';cx.textAlign='left';
+  cx.fillText('합계금액: ₩'+fmt(totA),LX,HDR);
+  HDR+=20;
+  var minH=HDR+CHDR+(target.length+1)*ROW+60;
+  if(H<minH)H=minH;
   var y=HDR;
   cx.fillStyle='#dde5f5';cx.fillRect(PAD,y,tableRight-PAD,CHDR);
   cx.strokeStyle='#8090b0';cx.lineWidth=1.5;cx.strokeRect(PAD,y,tableRight-PAD,CHDR);
