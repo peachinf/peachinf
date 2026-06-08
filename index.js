@@ -60,13 +60,12 @@ async function readFile(fileId) {
     r.data.on('error', reject);
   });
 }
-
 async function writeFile(fileId, jsonData) {
   const { Readable } = require('stream');
-  const stream = Readable.from([JSON.stringify(jsonData, null, 2)]);
+  const content = JSON.stringify(jsonData, null, 2);
+  const stream = Readable.from(content);
   await drive.files.update({ fileId, media: { mimeType: 'application/json', body: stream } });
 }
-
 // ─── FCM ─────────────────────────────────────────────
 async function sendFCM(title, body, topic = 'transactions') {
   try {
