@@ -62,8 +62,7 @@ async function readFile(fileId) {
 }
 async function writeFile(fileId, jsonData) {
   const { Readable } = require('stream');
-  const content = JSON.stringify(jsonData, null, 2);
-  const stream = Readable.from(content);
+  const stream = Readable.from([JSON.stringify(jsonData, null, 2)]);
   await drive.files.update({ fileId, media: { mimeType: 'application/json', body: stream } });
 }
 // ─── FCM ─────────────────────────────────────────────
