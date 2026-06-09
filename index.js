@@ -33,7 +33,7 @@ const drive = google.drive({
 const BACKUP_FOLDER_ID = '1tCkA7nT6j3BEyRh0RvrXbrZkUYiNwhiz';
 
 const FILE_IDS = {
-  records:       '1ZcJLe5bIfQJrpL7uCIPdwyIMO5aS_CAF',
+  records:       '1TqmaVl39bSlY8OIJpisBnwpQsPThyyJZ',
   weighing:      '1sMvG-YvC02KqVtZNrivQfubzzuhruiqG',
   requests:      '11DU2GEJP6jz8S8VfrTYhVRruxSKaeLRR',
   sell_requests: '1LcKY3kBLGZqmpJ4naKiC6ZX9SBLczUFn',
