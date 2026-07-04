@@ -40,6 +40,7 @@ const FILE_IDS = {
   pricing:       '1A1F5rzzXT2H56UDwYVptDkVoW5KHqTv1',
   notice:        '1y-QBQFcrduZx4dqmTEqun4xsBkv8H9nI',
   history:       '1HRK3B14zYaElV8tga45Ib3qqDeJyR-Nd',
+  members:       '1S5KjqLpiEtcCwchT_vXWgCGlLGtZDJIz',
 };
 
 // ─── 순차처리 Queue ───────────────────────────────────
@@ -399,6 +400,33 @@ app.delete('/inquiries/:id', async (req, res) => {
     await writeFile(INQUIRY_FILE_ID, data);
     res.json({ ok: true });
   } catch (e) { res.status(500).send(e.toString()); }
+});
+
+// ─── 회원가입 ─────────────────────────────────────────
+app.get('/members', async (req, res) => {
+  try { res.send(await readFile(FILE_IDS.members)); }
+  catch (e) { res.status(500).send(e.toString()); }
+});
+
+app.post('/members', async (req, res) => {
+  try {
+    const { name, phone, address } = req.body;
+    if (!name || !phone || !address) {
+      return res.status(400).json({ ok: false, error: '필수 항목 누락' });
+    }
+    const data = JSON.parse(await readFile(FILE_IDS.members));
+    const exists = data.members.find(m => m.phone === phone);
+    if (exists) {
+      return res.status(409).json({ ok: false, error: '이미 가입된 전화번호입니다' });
+    }
+    data.members.push({
+      id: genId(),
+      name, phone, address,
+      createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
+    });
+    await writeFile(FILE_IDS.members, data);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ ok: false, error: e.toString() }); }
 });
 
 app.get('/weighing', (req, res) => {
