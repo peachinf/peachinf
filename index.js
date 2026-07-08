@@ -33,8 +33,8 @@ const BACKUP_FOLDER_ID = '1tCkA7nT6j3BEyRh0RvrXbrZkUYiNwhiz';
 const FILE_IDS = {
   records:       '1TqmaVl39bSlY8OIJpisBnwpQsPThyyJZ',
   weighing:      '1sMvG-YvC02KqVtZNrivQfubzzuhruiqG',
-  requests:      '11DU2GEJP6jz8S8VfrTYhVRruxSKaeLRR',
-  sell_requests: '1LcKY3kBLGZqmpJ4naKiC6ZX9SBLczUFn',
+  requests:      '1XUeGlhm9hnJAEYNUP7rxhL8IlrOo2IKQ',
+  sell_requests: '1BYx_SCwP2zcUuyjxmlYbhECQN7VuFP0K',
   pricing:       '1A1F5rzzXT2H56UDwYVptDkVoW5KHqTv1',
   notice:        '1y-QBQFcrduZx4dqmTEqun4xsBkv8H9nI',
   history:       '1HRK3B14zYaElV8tga45Ib3qqDeJyR-Nd',
