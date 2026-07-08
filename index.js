@@ -35,7 +35,7 @@ const FILE_IDS = {
   weighing:      '1sMvG-YvC02KqVtZNrivQfubzzuhruiqG',
   requests:      '1XUeGlhm9hnJAEYNUP7rxhL8IlrOo2IKQ',
   sell_requests: '1BYx_SCwP2zcUuyjxmlYbhECQN7VuFP0K',
-  pricing:       '1A1F5rzzXT2H56UDwYVptDkVoW5KHqTv1',
+  pricing:       '1ls-mr0gNArlBbb-R3555T3hjdxqyOKEA',
   notice:        '1y-QBQFcrduZx4dqmTEqun4xsBkv8H9nI',
   history:       '1HRK3B14zYaElV8tga45Ib3qqDeJyR-Nd',
   members:       '1S5KjqLpiEtcCwchT_vXWgCGlLGtZDJIz',
