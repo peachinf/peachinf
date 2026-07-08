@@ -5,7 +5,7 @@ const admin = require('firebase-admin');
 const app = express();
 app.use(express.json());
 
-// ─── CORS ───────────────────────────────────────────
+// CORS
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
@@ -14,7 +14,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// ─── Firebase Admin 초기화 ───────────────────────────
 let serviceAccount;
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
   serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
@@ -29,7 +28,6 @@ const drive = google.drive({
   auth: new google.auth.GoogleAuth({ scopes: ['https://www.googleapis.com/auth/drive'] })
 });
 
-// ─── 파일 ID ─────────────────────────────────────────
 const BACKUP_FOLDER_ID = '1tCkA7nT6j3BEyRh0RvrXbrZkUYiNwhiz';
 
 const FILE_IDS = {
@@ -43,7 +41,6 @@ const FILE_IDS = {
   members:       '1S5KjqLpiEtcCwchT_vXWgCGlLGtZDJIz',
 };
 
-// ─── 순차처리 Queue ───────────────────────────────────
 let _weighingQueue = Promise.resolve();
 function weighingQueue(fn) {
   const result = _weighingQueue.then(() => fn());
@@ -51,70 +48,91 @@ function weighingQueue(fn) {
   return result;
 }
 
-// ─── 공통 읽기/쓰기 함수 ─────────────────────────────
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function withRetry(fn, label, maxAttempts = 4) {
+  let lastErr;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastErr = e;
+      console.error('[RETRY] ' + label + ' 실패 (시도 ' + attempt + '/' + maxAttempts + '): ' + e.message);
+      if (attempt < maxAttempts) {
+        await sleep(300 * attempt);
+      }
+    }
+  }
+  throw lastErr;
+}
+
 async function readFile(fileId) {
-  const r = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream' });
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    r.data.on('data', d => chunks.push(Buffer.isBuffer(d) ? d : Buffer.from(d)));
-    r.data.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-    r.data.on('error', reject);
-  });
+  return withRetry(async () => {
+    const r = await drive.files.get({ fileId, alt: 'media' }, { responseType: 'stream' });
+    return new Promise((resolve, reject) => {
+      const chunks = [];
+      r.data.on('data', d => chunks.push(Buffer.isBuffer(d) ? d : Buffer.from(d)));
+      r.data.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+      r.data.on('error', reject);
+    });
+  }, 'readFile(' + fileId + ')');
 }
+
 async function writeFile(fileId, jsonData) {
-  const { Readable } = require('stream');
-  const stream = Readable.from([JSON.stringify(jsonData, null, 2)]);
-  await drive.files.update({ fileId, media: { mimeType: 'application/json', body: stream } });
+  return withRetry(async () => {
+    const { Readable } = require('stream');
+    const stream = Readable.from([JSON.stringify(jsonData, null, 2)]);
+    await drive.files.update({ fileId, media: { mimeType: 'application/json', body: stream } });
+  }, 'writeFile(' + fileId + ')');
 }
-// ─── FCM ─────────────────────────────────────────────
-async function sendFCM(title, body, topic = 'transactions') {
+
+async function sendFCM(title, body, topic) {
+  topic = topic || 'transactions';
   try {
     await admin.messaging().send({ topic, notification: { title, body }, android: { priority: 'high' } });
-    console.log(`FCM 발송 완료 [${topic}]: ${title}`);
+    console.log('FCM 발송 완료 [' + topic + ']: ' + title);
   } catch (e) {
     console.error('FCM 오류:', e.message);
   }
 }
 
-// ─── ID 생성 ─────────────────────────────────────────
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
-// ─── 백업 ────────────────────────────────────────────
 async function backupToday(records) {
   try {
     const { Readable } = require('stream');
     const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-    const fileName = `weighing_records_${today}.json`;
+    const today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+    const fileName = 'weighing_records_' + today + '.json';
     const content = JSON.stringify({ records }, null, 2);
 
-    const list = await drive.files.list({
-      q: `'${BACKUP_FOLDER_ID}' in parents and name='${fileName}' and trashed=false`,
+    const list = await withRetry(() => drive.files.list({
+      q: "'" + BACKUP_FOLDER_ID + "' in parents and name='" + fileName + "' and trashed=false",
       fields: 'files(id)',
-    });
+    }), 'backupToday-list');
 
     if (list.data.files.length > 0) {
-      await drive.files.update({
+      await withRetry(() => drive.files.update({
         fileId: list.data.files[0].id,
         media: { mimeType: 'application/json', body: Readable.from([content]) },
-      });
+      }), 'backupToday-update');
     } else {
-      await drive.files.create({
+      await withRetry(() => drive.files.create({
         requestBody: { name: fileName, parents: [BACKUP_FOLDER_ID] },
         media: { mimeType: 'application/json', body: Readable.from([content]) },
-      });
+      }), 'backupToday-create');
 
-      const all = await drive.files.list({
-        q: `'${BACKUP_FOLDER_ID}' in parents and trashed=false`,
+      const all = await withRetry(() => drive.files.list({
+        q: "'" + BACKUP_FOLDER_ID + "' in parents and trashed=false",
         fields: 'files(id, name)',
         orderBy: 'name asc',
-      });
+      }), 'backupToday-listall');
       const files = all.data.files;
       if (files.length > 7) {
         for (let i = 0; i < files.length - 7; i++) {
-          await drive.files.delete({ fileId: files[i].id });
+          await withRetry(() => drive.files.delete({ fileId: files[i].id }), 'backupToday-delete');
         }
       }
     }
@@ -123,7 +141,6 @@ async function backupToday(records) {
   }
 }
 
-// ─── 계량기록 읽기/쓰기 (JSON) ───────────────────────
 async function readWeighingRecords() {
   const text = await readFile(FILE_IDS.weighing);
   const data = JSON.parse(text);
@@ -135,7 +152,6 @@ async function writeWeighingRecords(records) {
   await backupToday(records);
 }
 
-// ─── 기존: 일정 ──────────────────────────────────────
 app.get('/records', async (req, res) => {
   try { res.send(await readFile(FILE_IDS.records)); }
   catch (e) { res.status(500).send(e.toString()); }
@@ -146,7 +162,6 @@ app.post('/records', async (req, res) => {
   catch (e) { res.status(500).json({ ok: false, error: e.toString() }); }
 });
 
-// ─── 계량기록 조회 ───────────────────────────────────
 app.get('/records/json', async (req, res) => {
   try {
     const records = await readWeighingRecords();
@@ -154,7 +169,6 @@ app.get('/records/json', async (req, res) => {
   } catch (e) { res.status(500).send(e.toString()); }
 });
 
-// ─── 계량기록 저장 ───────────────────────────────────
 app.post('/weighing/save', (req, res) => {
   weighingQueue(async () => {
     const b = req.body;
@@ -174,7 +188,6 @@ app.post('/weighing/save', (req, res) => {
   }).catch(e => res.status(500).json({ ok: false, error: e.toString() }));
 });
 
-// ─── 계량기록 수정 ───────────────────────────────────
 app.post('/weighing/update', (req, res) => {
   weighingQueue(async () => {
     const b = req.body;
@@ -201,7 +214,6 @@ app.post('/weighing/update', (req, res) => {
   }).catch(e => res.status(500).json({ ok: false, error: e.toString() }));
 });
 
-// ─── 계량기록 삭제 ───────────────────────────────────
 app.post('/weighing/delete', (req, res) => {
   weighingQueue(async () => {
     const { id, date, car, gross, grossTime } = req.body;
@@ -220,14 +232,27 @@ app.post('/weighing/delete', (req, res) => {
   }).catch(e => res.status(500).json({ ok: false, error: e.toString() }));
 });
 
-// ─── 수거요청 ─────────────────────────────────────────
+let _requestsQueue = Promise.resolve();
+function requestsQueue(fn) {
+  const result = _requestsQueue.then(() => fn());
+  _requestsQueue = result.catch(() => {});
+  return result;
+}
+
+let _sellQueue = Promise.resolve();
+function sellQueue(fn) {
+  const result = _sellQueue.then(() => fn());
+  _sellQueue = result.catch(() => {});
+  return result;
+}
+
 app.get('/requests', async (req, res) => {
   try { res.send(await readFile(FILE_IDS.requests)); }
   catch (e) { res.status(500).send(e.toString()); }
 });
 
-app.post('/requests/complete', async (req, res) => {
-  try {
+app.post('/requests/complete', (req, res) => {
+  requestsQueue(async () => {
     const { id } = req.body;
     const reqData = JSON.parse(await readFile(FILE_IDS.requests));
     const idx = reqData.requests.findIndex(r => String(r.id) === String(id));
@@ -241,11 +266,11 @@ app.post('/requests/complete', async (req, res) => {
     await writeFile(FILE_IDS.history, histData);
     await sendFCM('📦 수거신청 상태변경', '수거신청이 [완료] 처리되었습니다.', 'transactions');
     res.json({ ok: true });
-  } catch (e) { res.status(500).send(e.toString()); }
+  }).catch(e => res.status(500).send(e.toString()));
 });
 
-app.post('/sell_requests/complete', async (req, res) => {
-  try {
+app.post('/sell_requests/complete', (req, res) => {
+  sellQueue(async () => {
     const { id } = req.body;
     const reqData = JSON.parse(await readFile(FILE_IDS.sell_requests));
     const idx = reqData.requests.findIndex(r => String(r.id) === String(id));
@@ -259,46 +284,46 @@ app.post('/sell_requests/complete', async (req, res) => {
     await writeFile(FILE_IDS.history, histData);
     await sendFCM('⚙️ 고철판매 상태변경', '고철판매신청이 [완료] 처리되었습니다.', 'transactions');
     res.json({ ok: true });
-  } catch (e) { res.status(500).send(e.toString()); }
+  }).catch(e => res.status(500).send(e.toString()));
 });
 
-app.post('/requests/add', async (req, res) => {
-  try {
+app.post('/requests/add', (req, res) => {
+  requestsQueue(async () => {
     const json = JSON.parse(await readFile(FILE_IDS.requests));
     json.requests.push(req.body);
     await writeFile(FILE_IDS.requests, json);
     res.json({ ok: true });
-  } catch (e) { res.status(500).send(e.toString()); }
+  }).catch(e => res.status(500).send(e.toString()));
 });
 
-app.post('/requests', async (req, res) => {
-  try {
+app.post('/requests', (req, res) => {
+  requestsQueue(async () => {
     const json = JSON.parse(await readFile(FILE_IDS.requests));
     const { id, status } = req.body;
     const r = json.requests.find(r => r.id == id);
     if (r) r.status = status;
     await writeFile(FILE_IDS.requests, json);
-    await sendFCM('📦 수거신청 상태변경', `수거신청 상태가 [${status}](으)로 변경되었습니다.`, 'transactions');
+    await sendFCM('📦 수거신청 상태변경', '수거신청 상태가 [' + status + '](으)로 변경되었습니다.', 'transactions');
     res.json({ ok: true });
-  } catch (e) { res.status(500).send(e.toString()); }
+  }).catch(e => res.status(500).send(e.toString()));
 });
 
-app.delete('/requests/:id', async (req, res) => {
-  try {
+app.delete('/requests/:id', (req, res) => {
+  requestsQueue(async () => {
     const json = JSON.parse(await readFile(FILE_IDS.requests));
     json.requests = json.requests.filter(r => String(r.id) !== String(req.params.id));
     await writeFile(FILE_IDS.requests, json);
     res.json({ ok: true });
-  } catch (e) { res.status(500).send(e.toString()); }
+  }).catch(e => res.status(500).send(e.toString()));
 });
 
-app.delete('/sell_requests/:id', async (req, res) => {
-  try {
+app.delete('/sell_requests/:id', (req, res) => {
+  sellQueue(async () => {
     const json = JSON.parse(await readFile(FILE_IDS.sell_requests));
     json.requests = json.requests.filter(r => String(r.id) !== String(req.params.id));
     await writeFile(FILE_IDS.sell_requests, json);
     res.json({ ok: true });
-  } catch (e) { res.status(500).send(e.toString()); }
+  }).catch(e => res.status(500).send(e.toString()));
 });
 
 app.get('/sell_requests', async (req, res) => {
@@ -306,25 +331,25 @@ app.get('/sell_requests', async (req, res) => {
   catch (e) { res.status(500).send(e.toString()); }
 });
 
-app.post('/sell_requests', async (req, res) => {
-  try {
+app.post('/sell_requests', (req, res) => {
+  sellQueue(async () => {
     const json = JSON.parse(await readFile(FILE_IDS.sell_requests));
     const { id, status } = req.body;
     const r = json.requests.find(r => r.id == id);
     if (r) r.status = status;
     await writeFile(FILE_IDS.sell_requests, json);
-    await sendFCM('⚙️ 고철판매 상태변경', `고철판매신청 상태가 [${status}](으)로 변경되었습니다.`, 'transactions');
+    await sendFCM('⚙️ 고철판매 상태변경', '고철판매신청 상태가 [' + status + '](으)로 변경되었습니다.', 'transactions');
     res.json({ ok: true });
-  } catch (e) { res.status(500).send(e.toString()); }
+  }).catch(e => res.status(500).send(e.toString()));
 });
 
-app.post('/sell_requests/add', async (req, res) => {
-  try {
+app.post('/sell_requests/add', (req, res) => {
+  sellQueue(async () => {
     const json = JSON.parse(await readFile(FILE_IDS.sell_requests));
     json.requests.push(req.body);
     await writeFile(FILE_IDS.sell_requests, json);
     res.json({ ok: true });
-  } catch (e) { res.status(500).send(e.toString()); }
+  }).catch(e => res.status(500).send(e.toString()));
 });
 
 app.get('/pricing', async (req, res) => {
@@ -402,7 +427,6 @@ app.delete('/inquiries/:id', async (req, res) => {
   } catch (e) { res.status(500).send(e.toString()); }
 });
 
-// ─── 회원가입 ─────────────────────────────────────────
 app.get('/members', async (req, res) => {
   try { res.send(await readFile(FILE_IDS.members)); }
   catch (e) { res.status(500).send(e.toString()); }
