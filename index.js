@@ -453,6 +453,56 @@ app.post('/members', async (req, res) => {
   } catch (e) { res.status(500).json({ ok: false, error: e.toString() }); }
 });
 
+// ─── 회원정보 수정 (전화번호 변경 포함) ───────────────
+app.post('/members/update', async (req, res) => {
+  try {
+    const { oldPhone, name, phone, address } = req.body;
+    if (!oldPhone || !name || !phone || !address) {
+      return res.status(400).json({ ok: false, error: '필수 항목 누락' });
+    }
+    const data = JSON.parse(await readFile(FILE_IDS.members));
+    const member = data.members.find(m => m.phone === oldPhone);
+    if (!member) {
+      return res.status(404).json({ ok: false, error: '회원을 찾을 수 없습니다' });
+    }
+    member.name = name;
+    member.phone = phone;
+    member.address = address;
+    // createdAt은 그대로 유지
+    await writeFile(FILE_IDS.members, data);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ ok: false, error: e.toString() }); }
+});
+
+// ─── 회원탈퇴 (회원정보 + 관련 요청/이력 전부 삭제) ──
+app.delete('/members/:phone', async (req, res) => {
+  try {
+    const phone = req.params.phone;
+
+    // 1) 회원정보 삭제
+    const memberData = JSON.parse(await readFile(FILE_IDS.members));
+    memberData.members = memberData.members.filter(m => m.phone !== phone);
+    await writeFile(FILE_IDS.members, memberData);
+
+    // 2) 수거요청 중 해당 전화번호 삭제
+    const reqData = JSON.parse(await readFile(FILE_IDS.requests));
+    reqData.requests = reqData.requests.filter(r => r.phone !== phone);
+    await writeFile(FILE_IDS.requests, reqData);
+
+    // 3) 판매요청 중 해당 전화번호 삭제
+    const sellData = JSON.parse(await readFile(FILE_IDS.sell_requests));
+    sellData.requests = sellData.requests.filter(r => r.phone !== phone);
+    await writeFile(FILE_IDS.sell_requests, sellData);
+
+    // 4) 거래이력 중 해당 전화번호 삭제
+    const histData = JSON.parse(await readFile(FILE_IDS.history));
+    histData.history = histData.history.filter(h => h.phone !== phone);
+    await writeFile(FILE_IDS.history, histData);
+
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ ok: false, error: e.toString() }); }
+});
+
 app.get('/weighing', (req, res) => {
   res.sendFile(__dirname + '/weighing.html');
 });
