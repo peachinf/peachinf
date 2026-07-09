@@ -474,30 +474,19 @@ app.post('/members/update', async (req, res) => {
   } catch (e) { res.status(500).json({ ok: false, error: e.toString() }); }
 });
 
-// ─── 회원탈퇴 (회원정보 + 관련 요청/이력 전부 삭제) ──
+// ─── 회원탈퇴 (소프트 삭제: status만 변경, 관련 요청/이력은 그대로 유지) ──
 app.delete('/members/:phone', async (req, res) => {
   try {
-    const phone = req.params.phone;
+    const phone = decodeURIComponent(req.params.phone);
 
-    // 1) 회원정보 삭제
     const memberData = JSON.parse(await readFile(FILE_IDS.members));
-    memberData.members = memberData.members.filter(m => m.phone !== phone);
+    const member = memberData.members.find(m => m.phone === phone);
+    if (!member) {
+      return res.status(404).json({ ok: false, error: '회원을 찾을 수 없습니다' });
+    }
+    member.status = '탈퇴';
+    member.withdrawnAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
     await writeFile(FILE_IDS.members, memberData);
-
-    // 2) 수거요청 중 해당 전화번호 삭제
-    const reqData = JSON.parse(await readFile(FILE_IDS.requests));
-    reqData.requests = reqData.requests.filter(r => r.phone !== phone);
-    await writeFile(FILE_IDS.requests, reqData);
-
-    // 3) 판매요청 중 해당 전화번호 삭제
-    const sellData = JSON.parse(await readFile(FILE_IDS.sell_requests));
-    sellData.requests = sellData.requests.filter(r => r.phone !== phone);
-    await writeFile(FILE_IDS.sell_requests, sellData);
-
-    // 4) 거래이력 중 해당 전화번호 삭제
-    const histData = JSON.parse(await readFile(FILE_IDS.history));
-    histData.history = histData.history.filter(h => h.phone !== phone);
-    await writeFile(FILE_IDS.history, histData);
 
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ ok: false, error: e.toString() }); }
