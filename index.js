@@ -39,6 +39,7 @@ const FILE_IDS = {
   notice:        '1eRcEHVtfgkNQ0eohjl2zCNWXSaMzNPKo',
   history:       '19Gy9FgUIbsHvLN5-j2lybq-Fg2v291HQ',
   members:       '1S5KjqLpiEtcCwchT_vXWgCGlLGtZDJIz',
+  orders:        '1jWNDd-yTXPMtWAl95LIvwmLBDybUZ97v',
 };
 
 let _weighingQueue = Promise.resolve();
@@ -355,6 +356,55 @@ app.post('/sell_requests/add', (req, res) => {
 app.get('/pricing', async (req, res) => {
   try { res.send(await readFile(FILE_IDS.pricing)); }
   catch (e) { res.status(500).send(e.toString()); }
+});
+
+let _ordersQueue = Promise.resolve();
+function ordersQueue(fn) {
+  const result = _ordersQueue.then(() => fn());
+  _ordersQueue = result.catch(() => {});
+  return result;
+}
+
+app.post('/api/orders', (req, res) => {
+  ordersQueue(async () => {
+    const data = JSON.parse(await readFile(FILE_IDS.orders));
+    const order = {
+      id: genId(),
+      userId: req.body.userId || 'guest',
+      date: req.body.date || '',
+      items: req.body.items || [],
+      total: req.body.total || 0,
+      depositor: req.body.depositor || '',
+      status: '대기',
+      createdAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
+    };
+    data.orders.push(order);
+    await writeFile(FILE_IDS.orders, data);
+    await sendFCM('🏪 목장용품 주문', order.depositor + '님 주문이 접수되었습니다.', 'transactions');
+    res.json({ ok: true, order });
+  }).catch(e => res.status(500).json({ ok: false, error: e.toString() }));
+});
+
+app.get('/api/orders', async (req, res) => {
+  try {
+    const data = JSON.parse(await readFile(FILE_IDS.orders));
+    const userId = req.query.userId;
+    const orders = data.orders
+      .filter(o => !userId || o.userId === userId)
+      .sort((a, b) => (b.id > a.id ? 1 : -1));
+    res.json({ orders });
+  } catch (e) { res.status(500).send(e.toString()); }
+});
+
+app.post('/api/orders/:id/cancel', (req, res) => {
+  ordersQueue(async () => {
+    const data = JSON.parse(await readFile(FILE_IDS.orders));
+    const o = data.orders.find(o => String(o.id) === String(req.params.id));
+    if (!o) return res.status(404).json({ ok: false, error: '주문을 찾을 수 없음' });
+    o.status = '취소';
+    await writeFile(FILE_IDS.orders, data);
+    res.json({ ok: true });
+  }).catch(e => res.status(500).json({ ok: false, error: e.toString() }));
 });
 
 app.post('/pricing', async (req, res) => {
