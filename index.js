@@ -407,6 +407,15 @@ app.post('/api/orders/:id/cancel', (req, res) => {
   }).catch(e => res.status(500).json({ ok: false, error: e.toString() }));
 });
 
+app.delete('/api/orders/:id', (req, res) => {
+  ordersQueue(async () => {
+    const data = JSON.parse(await readFile(FILE_IDS.orders));
+    data.orders = data.orders.filter(o => String(o.id) !== String(req.params.id));
+    await writeFile(FILE_IDS.orders, data);
+    res.json({ ok: true });
+  }).catch(e => res.status(500).json({ ok: false, error: e.toString() }));
+});
+
 app.post('/pricing', async (req, res) => {
   try { await writeFile(FILE_IDS.pricing, req.body); res.json({ ok: true }); }
   catch (e) { res.status(500).json({ ok: false, error: e.toString() }); }
