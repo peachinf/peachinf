@@ -3,7 +3,7 @@ const express = require('express');
 const { google } = require('googleapis');
 const admin = require('firebase-admin');
 const app = express();
-app.use(express.json()); 
+app.use(express.json());
 
 // CORS
 app.use((req, res, next) => {
@@ -437,10 +437,6 @@ app.post('/notice', async (req, res) => {
 app.get('/history', async (req, res) => {
   try { res.send(await readFile(FILE_IDS.history)); }
   catch (e) { res.status(500).send(e.toString()); }
-});
-
-app.get('/terms', (req, res) => {
-  res.send(`<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:sans-serif;font-size:14px;color:#212121;padding:20px;line-height:1.8;max-width:800px;margin:0 auto}h1{font-size:20px;font-weight:bold;border-bottom:2px solid #1976D2;padding-bottom:10px;margin-top:30px;color:#1976D2}h2{font-size:16px;font-weight:bold;margin-top:20px;color:#333}p{margin:8px 0}ul{padding-left:20px}li{margin:5px 0}.updated{color:#888;font-size:13px}</style></head><body><h1>이용약관</h1><p class="updated">시행일: 2026년 3월 10일</p><h2>제1조 (목적)</h2><p>본 약관은 재달(이하 "회사")이 제공하는 전남비닐고철 앱 서비스의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.</p><h2>제2조 (서비스의 내용)</h2><ul><li>비닐(곤포사일리지랩) 수거 신청 서비스</li><li>고철 판매 신청 서비스</li><li>수거 및 판매 신청 현황 조회 서비스</li><li>축산정보(소 이력 검색, 도축매출·사료단가·송아지 시세 조회) 서비스</li><li>목장용품 구매 서비스</li><li>공지사항 알림 서비스</li></ul><h2>제3조 (회원가입 및 서비스 이용)</h2><p>① 서비스는 전라남도 및 인접 전라권 지역 내 농장주를 대상으로 합니다.</p><p>② 이용자는 이름(농장명), 연락처, 주소를 입력하여 회원가입 후 서비스를 이용합니다.</p><p>③ 허위 정보 입력으로 인한 불이익은 이용자 본인이 부담합니다.</p><p>④ 이용자는 앱 내 마이페이지에서 언제든지 회원정보 수정 및 회원탈퇴를 요청할 수 있습니다.</p><h2>제4조 (목장용품 구매 및 결제)</h2><p>① 목장용품은 앱 내 안내된 계좌로 이체하는 방식으로 결제합니다.</p><p>② 주문 후 입금이 확인되면 상품을 배송하며, 배송 전 단계에서는 주문을 취소할 수 있습니다.</p><p>③ 상품 정보(가격, 규격 등)는 사정에 따라 사전 고지 없이 변경될 수 있습니다.</p><h2>제5조 (축산정보 서비스)</h2><p>① 소 이력 검색, 시세 및 사료단가 정보는 축산물품질평가원(EKAPE) 등 공공데이터를 기반으로 제공됩니다.</p><p>② 공공데이터 제공기관의 사정으로 정보가 지연되거나 일시 제공되지 않을 수 있습니다.</p><h2>제6조 (서비스 중단)</h2><p>시스템 점검, 천재지변 등 불가피한 사정이 있는 경우 서비스를 일시 중단할 수 있습니다.</p><h2>제7조 (면책조항)</h2><p>이용자가 입력한 정보의 오류로 인해 발생한 문제 및 공공데이터 기반 정보의 오차로 인해 발생한 문제에 대해 회사는 책임을 지지 않습니다.</p><h2>제8조 (약관의 변경)</h2><p>약관 변경 시 앱 내 공지사항을 통해 고지합니다.</p><br><br><h1>개인정보 취급방침</h1><p class="updated">시행일: 2026년 3월 10일</p><h2>제1조 (수집하는 개인정보 항목)</h2><ul><li>이름(농장명), 연락처, 주소 (회원가입 시)</li><li>신청 및 주문 내용(품목, 수량, 입금자명 등)</li><li>기기 식별값(FCM 알림 발송 목적)</li></ul><h2>제2조 (수집 및 이용 목적)</h2><ul><li>회원가입 및 회원관리</li><li>수거 및 판매 신청 처리</li><li>목장용품 주문 및 배송 처리</li><li>신청·주문 상태 변경 알림 발송</li><li>공지사항 알림 발송</li></ul><h2>제3조 (보유 및 이용 기간)</h2><p>목적 달성 후 지체 없이 파기하며, 회원탈퇴 시에도 관련 법령에 따라 보관이 필요한 거래기록은 일정기간 보관 후 파기합니다.</p><h2>제4조 (제3자 제공)</h2><p>이용자의 개인정보를 제3자에게 제공하지 않습니다.</p><h2>제5조 (개인정보 보호 책임자)</h2><p>회사명: 재달</p><h2>제6조 (이용자의 권리)</h2><p>개인정보 조회, 수정, 삭제를 요청할 수 있으며, 앱 내 마이페이지에서 회원정보 수정 및 탈퇴가 가능합니다.</p><h2>제7조 (방침의 변경)</h2><p>변경 시 앱 내 공지사항을 통해 고지합니다.</p></body></html>`);
 });
 
 const INQUIRY_FILE_ID = '1sdWRm31RdtvA8mrCu7jg_QdDDom15-lV';
