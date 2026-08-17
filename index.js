@@ -40,6 +40,7 @@ const FILE_IDS = {
   history:       '19Gy9FgUIbsHvLN5-j2lybq-Fg2v291HQ',
   members:       '1S5KjqLpiEtcCwchT_vXWgCGlLGtZDJIz',
   orders:        '1jWNDd-yTXPMtWAl95LIvwmLBDybUZ97v',
+  livestockData: '1aqSQe-Z9VE-YFHY7w7BEQSjywjdkutT_',
 };
 
 let _weighingQueue = Promise.resolve();
