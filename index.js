@@ -359,6 +359,49 @@ app.get('/pricing', async (req, res) => {
   catch (e) { res.status(500).send(e.toString()); }
 });
 
+// ─── 축산정보 수동입력 (사료단가/송아지시세/도축매출 오버라이드) ───
+// 구조: { feedPrice: {"2025-01": 518, ...}, calfM: {...}, calfF: {...}, beef: { "025003": {"2025-01": 950}, "025001": {...} } }
+let _livestockQueue = Promise.resolve();
+function livestockQueue(fn) {
+  const result = _livestockQueue.then(() => fn());
+  _livestockQueue = result.catch(() => {});
+  return result;
+}
+
+app.get('/api/livestock-data', async (req, res) => {
+  try {
+    const text = await readFile(FILE_IDS.livestockData);
+    res.send(text);
+  } catch (e) {
+    res.json({ feedPrice: {}, calfM: {}, calfF: {}, beef: { '025003': {}, '025001': {} } });
+  }
+});
+
+app.post('/api/livestock-data', (req, res) => {
+  livestockQueue(async () => {
+    const { type, ym, value, sexCd } = req.body;
+    if (!type || !ym || value === undefined) {
+      return res.status(400).json({ ok: false, error: '필수값 누락 (type, ym, value)' });
+    }
+    let data;
+    try { data = JSON.parse(await readFile(FILE_IDS.livestockData)); }
+    catch { data = { feedPrice: {}, calfM: {}, calfF: {}, beef: { '025003': {}, '025001': {} } }; }
+
+    if (type === 'beef') {
+      if (!sexCd) return res.status(400).json({ ok: false, error: 'beef 타입은 sexCd 필요' });
+      data.beef = data.beef || { '025003': {}, '025001': {} };
+      data.beef[sexCd] = data.beef[sexCd] || {};
+      data.beef[sexCd][ym] = value;
+    } else {
+      data[type] = data[type] || {};
+      data[type][ym] = value;
+    }
+
+    await writeFile(FILE_IDS.livestockData, data);
+    res.json({ ok: true, data });
+  }).catch(e => res.status(500).json({ ok: false, error: e.toString() }));
+});
+
 let _ordersQueue = Promise.resolve();
 function ordersQueue(fn) {
   const result = _ordersQueue.then(() => fn());
