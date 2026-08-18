@@ -151,7 +151,7 @@ async function readWeighingRecords() {
 
 async function writeWeighingRecords(records) {
   await writeFile(FILE_IDS.weighing, { records });
-  await backupToday(records);
+  backupToday(records).catch(e => console.error('백업 오류(비동기):', e.message));
 }
 
 app.get('/records', async (req, res) => {
