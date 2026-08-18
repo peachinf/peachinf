@@ -96,19 +96,19 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
     <input type="text" id="fCompany" autocomplete="off" style="flex:1;min-width:0;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;">
   </div>
 </td></tr>
-<tr><td class="fl">품목</td><td colspan="2" style="padding:3px 0;"><input type="text" id="fItem" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fGross').focus();}" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;min-width:0;"></td></tr>
+<tr><td class="fl">품목</td><td colspan="2" style="padding:3px 0;"><input type="text" id="fItem" tabindex="1" autocomplete="off" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;min-width:0;"></td></tr>
 <style>
 #fTareTime::placeholder{color:#fff}
 </style>
 <tr>
 <td class="fl">총중량</td>
-<td style="padding:3px 4px 3px 0;vertical-align:middle;"><input type="text" id="fGrossTime" inputmode="numeric" placeholder="HH:MM" maxlength="5" oninput="formatTimeInput(this)" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;min-width:0;text-align:center;display:block;"></td>
-<td style="padding:3px 0;vertical-align:middle;"><input type="text" id="fGross" inputmode="numeric" placeholder="0" oninput="onGrossInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fTare').focus();}" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;min-width:0;"></td>
+<td style="padding:3px 4px 3px 0;vertical-align:middle;"><input type="text" id="fGrossTime" tabindex="-1" inputmode="numeric" placeholder="HH:MM" maxlength="5" oninput="formatTimeInput(this)" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;min-width:0;text-align:center;display:block;"></td>
+<td style="padding:3px 0;vertical-align:middle;"><input type="text" id="fGross" tabindex="2" inputmode="numeric" placeholder="0" oninput="onGrossInput()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;min-width:0;"></td>
 </tr>
 <tr>
 <td class="fl">공차중량</td>
-<td style="padding:3px 4px 3px 0;vertical-align:middle;"><input type="text" id="fTareTime" inputmode="numeric" placeholder="HH:MM" maxlength="5" oninput="formatTimeInput(this)" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;min-width:0;text-align:center;display:block;"></td>
-<td style="padding:3px 0;vertical-align:middle;"><input type="text" id="fTare" inputmode="numeric" placeholder="0" oninput="onTareInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fPrice').focus();}" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;min-width:0;"></td>
+<td style="padding:3px 4px 3px 0;vertical-align:middle;"><input type="text" id="fTareTime" tabindex="-1" inputmode="numeric" placeholder="HH:MM" maxlength="5" oninput="formatTimeInput(this)" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;min-width:0;text-align:center;display:block;"></td>
+<td style="padding:3px 0;vertical-align:middle;"><input type="text" id="fTare" tabindex="3" inputmode="numeric" placeholder="0" oninput="onTareInput()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;min-width:0;"></td>
 </tr>
 <tr>
 <td class="fl">감량</td>
@@ -116,9 +116,9 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
 <td style="padding:3px 0;"><input type="number" id="fLoss" inputmode="numeric" placeholder="0" oninput="onLossInput()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;min-width:0;"></td>
 </tr>
 <tr><td class="fl">인수량</td><td colspan="2" style="padding:3px 0;"><input type="text" id="fReal" readonly style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;background:#f5f5f5;font-family:inherit;min-width:0;"></td></tr>
-<tr><td class="fl">단가</td><td colspan="2" style="padding:3px 0;"><input type="number" id="fPrice" inputmode="numeric" placeholder="0" oninput="calcAll()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;min-width:0;"></td></tr>
+<tr><td class="fl">단가</td><td colspan="2" style="padding:3px 0;"><input type="number" id="fPrice" tabindex="4" inputmode="numeric" placeholder="0" oninput="calcAll()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;min-width:0;"></td></tr>
 <tr><td class="fl">금액</td><td colspan="2" style="padding:3px 0;"><input type="text" id="fAmount" readonly style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:16px;font-weight:700;text-align:right;background:#f5f5f5;font-family:inherit;min-width:0;"></td></tr>
-<tr><td class="fl">비고</td><td colspan="2" style="padding:3px 0;"><input type="text" id="fMemo" autocomplete="off" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;min-width:0;"></td></tr>
+<tr><td class="fl">비고</td><td colspan="2" style="padding:3px 0;"><input type="text" id="fMemo" tabindex="5" autocomplete="off" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;min-width:0;"></td></tr>
 </table>
 </div>
 <div class="btn-row" style="margin-bottom:20px;">
