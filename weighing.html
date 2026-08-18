@@ -99,12 +99,12 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
 <tr><td class="fl">품목</td><td colspan="2" style="padding:3px 0;"><input type="text" id="fItem" autocomplete="off" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;font-family:inherit;min-width:0;"></td></tr>
 <tr>
 <td class="fl">총중량</td>
-<td style="padding:3px 4px 3px 0;"><input type="time" id="fGrossTime" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;min-width:0;"></td>
+<td style="padding:3px 4px 3px 0;"><input type="text" id="fGrossTime" inputmode="numeric" placeholder="HH:MM" maxlength="5" oninput="formatTimeInput(this)" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;min-width:0;"></td>
 <td style="padding:3px 0;"><input type="text" id="fGross" inputmode="numeric" placeholder="0" oninput="onGrossInput()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;min-width:0;"></td>
 </tr>
 <tr>
 <td class="fl">공차중량</td>
-<td style="padding:3px 4px 3px 0;"><input type="time" id="fTareTime" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;min-width:0;"></td>
+<td style="padding:3px 4px 3px 0;"><input type="text" id="fTareTime" inputmode="numeric" placeholder="HH:MM" maxlength="5" oninput="formatTimeInput(this)" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;min-width:0;"></td>
 <td style="padding:3px 0;"><input type="text" id="fTare" inputmode="numeric" placeholder="0" oninput="onTareInput()" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;min-width:0;"></td>
 </tr>
 <tr>
@@ -174,6 +174,13 @@ window.onload=function(){
 
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
 function hhmm(d){return pad(d.getHours())+':'+pad(d.getMinutes());}
+function formatTimeInput(el){
+  var digits=el.value.replace(/[^0-9]/g,'').slice(0,4);
+  var hh=digits.slice(0,2), mm=digits.slice(2,4);
+  if(hh.length===2 && parseInt(hh,10)>23) hh='23';
+  if(mm.length===2 && parseInt(mm,10)>59) mm='59';
+  el.value = mm ? (hh+':'+mm) : hh;
+}
 function pad(n){return String(n).padStart(2,'0');}
 function pn(s){return parseFloat(String(s||0).replace(/,/g,''))||0;}
 function fmt(v){return v?Number(v).toLocaleString('ko-KR'):'0';}
