@@ -102,13 +102,13 @@ body{font-family:'Malgun Gothic',-apple-system,sans-serif;background:var(--gray)
 </style>
 <tr>
 <td class="fl">총중량</td>
-<td style="padding:3px 4px 3px 0;"><input type="text" id="fGrossTime" inputmode="numeric" placeholder="HH:MM" maxlength="5" oninput="formatTimeInput(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fGross').focus();}" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;min-width:0;text-align:center;"></td>
-<td style="padding:3px 0;"><input type="text" id="fGross" inputmode="numeric" placeholder="0" oninput="onGrossInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fTareTime').focus();}" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;min-width:0;"></td>
+<td style="padding:3px 4px 3px 0;vertical-align:middle;"><input type="text" id="fGrossTime" inputmode="numeric" placeholder="HH:MM" maxlength="5" oninput="formatTimeInput(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fGross').focus();}" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;min-width:0;text-align:center;line-height:normal;vertical-align:middle;"></td>
+<td style="padding:3px 0;vertical-align:middle;"><input type="text" id="fGross" inputmode="numeric" placeholder="0" oninput="onGrossInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fTareTime').focus();}" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;min-width:0;"></td>
 </tr>
 <tr>
 <td class="fl">공차중량</td>
-<td style="padding:3px 4px 3px 0;"><input type="text" id="fTareTime" inputmode="numeric" placeholder="HH:MM" maxlength="5" oninput="formatTimeInput(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fTare').focus();}" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;min-width:0;text-align:center;"></td>
-<td style="padding:3px 0;"><input type="text" id="fTare" inputmode="numeric" placeholder="0" oninput="onTareInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fReal').focus();}" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;min-width:0;"></td>
+<td style="padding:3px 4px 3px 0;vertical-align:middle;"><input type="text" id="fTareTime" inputmode="numeric" placeholder="HH:MM" maxlength="5" oninput="formatTimeInput(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fTare').focus();}" style="width:100%;padding:7px 4px;border:1px solid #ccc;border-radius:4px;font-size:14px;font-family:inherit;min-width:0;text-align:center;line-height:normal;vertical-align:middle;"></td>
+<td style="padding:3px 0;vertical-align:middle;"><input type="text" id="fTare" inputmode="numeric" placeholder="0" oninput="onTareInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('fReal').focus();}" style="width:100%;padding:7px 8px;border:1px solid #ccc;border-radius:4px;font-size:15px;text-align:right;font-family:inherit;min-width:0;"></td>
 </tr>
 <tr>
 <td class="fl">감량</td>
