@@ -465,6 +465,10 @@ app.post('/pricing', async (req, res) => {
   catch (e) { res.status(500).json({ ok: false, error: e.toString() }); }
 });
 
+app.get('/privacy', (req, res) => {
+  res.sendFile(__dirname + '/privacy.html');
+});
+
 app.get('/notice', async (req, res) => {
   try { res.send(await readFile(FILE_IDS.notice)); }
   catch (e) { res.status(500).send(e.toString()); }
