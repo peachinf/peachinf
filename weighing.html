@@ -356,7 +356,12 @@ function renderList(){
     if(type!=='전체'&&r.type!==type)return false;
     if(kw&&![r.car,r.company,r.item,r.memo].join(' ').toLowerCase().includes(kw))return false;
     return true;
-  }).sort(function(a,b){return((b.date||'')+(b.id||''))>((a.date||'')+(a.id||''))?1:-1;});
+  }).sort(function(a,b){
+    if((a.date||'')!==(b.date||''))return (b.date||'')>(a.date||'')?1:-1;
+    var ta=a.grossTime||'',tb=b.grossTime||'';
+    if(ta!==tb)return tb>ta?1:-1;
+    return String(b.id||'')>String(a.id||'')?1:-1;
+  });
 
   var tR=filtered.reduce(function(s,r){return s+(Number(r.real)||0);},0);
   var tA=filtered.reduce(function(s,r){return s+(Number(r.amount)||0);},0);
