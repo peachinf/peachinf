@@ -434,7 +434,7 @@ function genCertImg(){vib();
   var car=document.getElementById('fCar').value.trim()||'-';
   var company=document.getElementById('fCompany').value.trim()||'-';
   var memo=document.getElementById('fMemo').value.trim();
-  var matched=records.filter(function(r){return r.date===date&&r.car===car&&r.type==='매입';}).slice(0,3);
+  var matched=records.filter(function(r){return r.date===date&&r.car===car&&(r.company||'').trim()===company&&r.type==='매입';}).slice(0,3);
   if(matched.length===0){matched=[{item:document.getElementById('fItem').value.trim()||'-',gross:pn(document.getElementById('fGross').value),tare:pn(document.getElementById('fTare').value),grossTime:document.getElementById('fGrossTime').value,tareTime:document.getElementById('fTareTime').value,loss:pn(document.getElementById('fLoss').value),real:pn(document.getElementById('fReal').value.replace(/,/g,'')),price:pn(document.getElementById('fPrice').value),amount:pn(document.getElementById('fAmount').value.replace(/,/g,''))}];}
   var n=matched.length;
   var totalAmount=matched.reduce(function(s,r){return s+(Number(r.amount)||0);},0);
