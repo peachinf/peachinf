@@ -583,12 +583,23 @@ app.delete('/members/:phone', async (req, res) => {
     const phone = decodeURIComponent(req.params.phone);
 
     const memberData = JSON.parse(await readFile(FILE_IDS.members));
-    const member = memberData.members.find(m => m.phone === phone);
-    if (!member) {
+    const idx = memberData.members.findIndex(m => m.phone === phone);
+    if (idx === -1) {
       return res.status(404).json({ ok: false, error: '회원을 찾을 수 없습니다' });
     }
-    member.status = '탈퇴';
-    member.withdrawnAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    const member = memberData.members[idx];
+
+    if (req.query.permanent === '1') {
+      // 완전 삭제: 이미 탈퇴 처리된 회원만 가능
+      if (member.status !== '탈퇴') {
+        return res.status(400).json({ ok: false, error: '탈퇴 회원만 완전 삭제할 수 있습니다' });
+      }
+      memberData.members.splice(idx, 1);
+    } else {
+      // 소프트 삭제(탈퇴): status만 변경, 관련 요청/이력은 그대로 유지
+      member.status = '탈퇴';
+      member.withdrawnAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    }
     await writeFile(FILE_IDS.members, memberData);
 
     res.json({ ok: true });
